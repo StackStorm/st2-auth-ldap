@@ -14,16 +14,16 @@ ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./grou
 ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./groups/execute.ldif -c
 ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./groups/read.ldif -c
 ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./users/1001_jon.ldif -c
-ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./users/1002_jorah.ldif
-ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./users/1003_tyrion.ldif
-ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./users/1004_arya.ldif
-ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./users/1005_daenerys.ldif
-ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./users/1006_petyr.ldif
-ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./users/1007_sansa.ldif
-ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./assignment/arya.execute.ldif
-ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./assignment/daenerys.write.ldif
-ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./assignment/jon.execute.ldif
-ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./assignment/jorah.execute.ldif
-ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./assignment/petyr.write.ldif
-ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./assignment/sansa.read.ldif
-ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./assignment/tyrion.write.ldif
+ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./users/1002_jorah.ldif -c
+ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./users/1003_tyrion.ldif -c
+ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./users/1004_arya.ldif -c
+ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./users/1005_daenerys.ldif -c
+ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./users/1006_petyr.ldif -c
+ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./users/1007_sansa.ldif -c
+ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./assignment/arya.execute.ldif -c
+ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./assignment/daenerys.write.ldif -c
+ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./assignment/jon.execute.ldif -c
+ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./assignment/jorah.execute.ldif -c
+ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./assignment/petyr.write.ldif -c
+ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./assignment/sansa.read.ldif -c
+ldapadd -h ${LDAP_HOST} -x -D ${LDAP_BIND_DN} -w ${LDAP_BIND_PASSWORD} -f ./assignment/tyrion.write.ldif -c
