@@ -1,0 +1,4 @@
+dn: ou=groups,dc=staging,dc=stackstorm,dc=net
+objectClass: top
+objectClass: organizationalUnit
+ou: groups

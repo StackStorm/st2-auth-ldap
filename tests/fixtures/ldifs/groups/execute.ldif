@@ -1,0 +1,5 @@
+dn: cn=execute,ou=operation,ou=groups,dc=staging,dc=stackstorm,dc=net
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: execute
+uniqueMember:

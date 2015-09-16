@@ -1,0 +1,4 @@
+dn: cn=execute,ou=operation,ou=groups,dc=staging,dc=stackstorm,dc=net
+changetype: modify
+add: uniqueMember
+uniqueMember: uid=jorah,ou=users,dc=staging,dc=stackstorm,dc=net

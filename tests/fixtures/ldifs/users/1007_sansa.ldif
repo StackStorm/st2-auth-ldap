@@ -1,0 +1,16 @@
+dn: uid=sansa,ou=users,dc=staging,dc=stackstorm,dc=net
+objectClass: top
+objectClass: account
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: sansa
+uid: sansa
+uidNumber: 1007
+gidNumber: 100
+homeDirectory: /home/sansa
+loginShell: /bin/bash
+gecos: sansa
+userPassword: {crypt}x
+shadowLastChange: 0
+shadowMax: 0
+shadowWarning: 0

@@ -1,0 +1,16 @@
+dn: uid=tyrion,ou=users,dc=staging,dc=stackstorm,dc=net
+objectClass: top
+objectClass: account
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: tyrion
+uid: tyrion
+uidNumber: 1003
+gidNumber: 100
+homeDirectory: /home/tyrion
+loginShell: /bin/bash
+gecos: tyrion
+userPassword: {crypt}x
+shadowLastChange: 0
+shadowMax: 0
+shadowWarning: 0

@@ -1,0 +1,16 @@
+dn: uid=jon,ou=users,dc=staging,dc=stackstorm,dc=net
+objectClass: top
+objectClass: account
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: jon
+uid: jon
+uidNumber: 1001
+gidNumber: 100
+homeDirectory: /home/jon
+loginShell: /bin/bash
+gecos: jon
+userPassword: {crypt}x
+shadowLastChange: 0
+shadowMax: 0
+shadowWarning: 0

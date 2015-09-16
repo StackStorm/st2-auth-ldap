@@ -1,0 +1,16 @@
+dn: uid=daenerys,ou=users,dc=staging,dc=stackstorm,dc=net
+objectClass: top
+objectClass: account
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: daenerys
+uid: daenerys
+uidNumber: 1005
+gidNumber: 100
+homeDirectory: /home/daenerys
+loginShell: /bin/bash
+gecos: daenerys
+userPassword: {crypt}x
+shadowLastChange: 0
+shadowMax: 0
+shadowWarning: 0

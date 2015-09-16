@@ -1,0 +1,16 @@
+dn: uid=arya,ou=users,dc=staging,dc=stackstorm,dc=net
+objectClass: top
+objectClass: account
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: arya
+uid: arya
+uidNumber: 1004
+gidNumber: 100
+homeDirectory: /home/arya
+loginShell: /bin/bash
+gecos: arya
+userPassword: {crypt}x
+shadowLastChange: 0
+shadowMax: 0
+shadowWarning: 0
