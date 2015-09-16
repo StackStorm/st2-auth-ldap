@@ -17,6 +17,7 @@
 
 from __future__ import absolute_import
 
+import os
 import logging
 
 import ldap
@@ -29,4 +30,83 @@ LOG = logging.getLogger(__name__)
 
 
 class LDAPAuthenticationBackend(object):
-    pass
+
+    def __init__(self, users_ou, host, port=389, scope=2, id_attr='uid',
+                 use_ssl=False, use_tls=False, cacert=None):
+
+        if not host:
+            raise ValueError('Hostname for the LDAP server is not provided.')
+
+        self._host = host
+
+        if port:
+            self._port = port
+        elif not port and not use_ssl:
+            LOG.warn('Default port 389 is used for the LDAP query.')
+            self._port = 389
+        elif not port and use_ssl:
+            LOG.warn('Default port 636 is used for the LDAP query over SSL.')
+            self._port = 636
+
+        if not users_ou:
+            raise ValueError('Users OU for the LDAP query is not provided.')
+
+        self._users_ou = users_ou
+
+        if scope < 0 or scope > 2:
+            raise ValueError('Scope value for the LDAP query must be between 0 and 2.')
+
+        self._scope = scope
+
+        if not id_attr:
+            LOG.warn('Default to "uid" for the user attribute in the LDAP query.')
+
+        self._id_attr = id_attr or 'uid'
+
+        if use_ssl and use_tls:
+            raise ValueError('SSL and TLS cannot be both true.')
+
+        self._use_ssl = use_ssl
+        self._use_tls = use_tls
+
+        if cacert and not os.path.isfile(cacert): 
+            raise ValueError('Unable to find the cacert file "%s" for the LDAP connection.' % cacert)
+
+        self._cacert = cacert
+
+    def authenticate(self, username, password):
+        try:
+            # Use CA cert bundle to validate certificate if present.
+            if self._use_tls and self._cacert:
+                ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._cacert)
+            elif self._use_tls and not self._cacert:
+                ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+         
+            # Setup connection and options.
+            protocol = 'ldaps' if self._use_ssl else 'ldap'
+            endpoint = '%s://%s:%d' % (protocol, self._host, self._port)
+            connection = ldap.initialize(endpoint)
+            connection.set_option(ldap.OPT_DEBUG_LEVEL, 255)
+            connection.set_option(ldap.OPT_REFERRALS, 0)
+            connection.set_option(ldap.OPT_PROTOCOL_VERSION, ldap.VERSION3)
+
+            if self._use_tls:
+                connection.start_tls_s()
+ 
+            try:
+                # Bind using given username and password.
+                user_dn = '%s=%s,%s' % (self._id_attr, username, self._users_ou)
+                connection.simple_bind_s(user_dn, password)
+                LOG.info('Successfully authenticated user "%s".' % username)
+                return True
+            except Exception as e:
+                LOG.exception('Failed authenticating user "%s".' % username)
+                return False
+            finally:
+                connection.unbind_s()
+        except ldap.LDAPError as e:
+            LOG.exception('Unexpected LDAP configuration or connection error.')
+            return False
+
+    def get_user(self, username):
+        pass
