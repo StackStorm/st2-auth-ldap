@@ -21,6 +21,7 @@ import os
 import logging
 
 import ldap
+import ldapurl
 
 __all__ = [
     'LDAPAuthenticationBackend'
@@ -28,11 +29,17 @@ __all__ = [
 
 LOG = logging.getLogger(__name__)
 
+SEARCH_SCOPES = {
+    'base': ldapurl.LDAP_SCOPE_BASE,
+    'onelevel': ldapurl.LDAP_SCOPE_ONELEVEL,
+    'subtree': ldapurl.LDAP_SCOPE_SUBTREE
+}
+
 
 class LDAPAuthenticationBackend(object):
 
-    def __init__(self, users_ou, host, port=389, scope=2, id_attr='uid',
-                 use_ssl=False, use_tls=False, cacert=None):
+    def __init__(self, users_ou, host, port=389, scope='subtree',
+                 id_attr='uid', use_ssl=False, use_tls=False, cacert=None):
 
         if not host:
             raise ValueError('Hostname for the LDAP server is not provided.')
@@ -53,10 +60,11 @@ class LDAPAuthenticationBackend(object):
 
         self._users_ou = users_ou
 
-        if scope < 0 or scope > 2:
-            raise ValueError('Scope value for the LDAP query must be between 0 and 2.')
+        if scope not in SEARCH_SCOPES.keys():
+            raise ValueError('Scope value for the LDAP query must be one of '
+                             '%s.' % str(SEARCH_SCOPES.keys()))
 
-        self._scope = scope
+        self._scope = SEARCH_SCOPES[scope]
 
         if not id_attr:
             LOG.warn('Default to "uid" for the user attribute in the LDAP query.')

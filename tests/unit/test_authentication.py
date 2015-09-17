@@ -55,12 +55,16 @@ class LDAPBackendAuthenticationTest(unittest2.TestCase):
 
         self.assertEqual(9090, backend._port)
 
+    def test_scope(self):
+        for scope in ['base', 'onelevel', 'subtree']:
+            backend = ldap_backend.LDAPAuthenticationBackend(
+                users_ou=LDAP_USERS_OU, host=LDAP_HOST, scope=scope)
+
+            self.assertEqual(ldap_backend.SEARCH_SCOPES[scope], backend._scope)
+
     def test_bad_scope(self):
         self.assertRaises(ValueError, ldap_backend.LDAPAuthenticationBackend,
-                          users_ou=LDAP_USERS_OU, host=LDAP_HOST, scope=-1)
-
-        self.assertRaises(ValueError, ldap_backend.LDAPAuthenticationBackend,
-                          users_ou=LDAP_USERS_OU, host=LDAP_HOST, scope=3)
+                          users_ou=LDAP_USERS_OU, host=LDAP_HOST, scope='foo')
 
     def test_null_id_attr(self):
         backend = ldap_backend.LDAPAuthenticationBackend(
