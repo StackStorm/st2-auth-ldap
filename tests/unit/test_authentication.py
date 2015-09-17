@@ -142,6 +142,9 @@ class LDAPBackendAuthenticationTest(unittest2.TestCase):
         self.assertTrue(authenticated)
 
     @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'start_tls_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
         ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
         mock.MagicMock(return_value=None))
     def test_tls_authenticate(self):
@@ -152,6 +155,9 @@ class LDAPBackendAuthenticationTest(unittest2.TestCase):
         self.assertTrue(authenticated)
 
     @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'start_tls_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
         ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
         mock.MagicMock(side_effect=Exception()))
     def test_tls_authenticate_failure(self):
@@ -161,6 +167,9 @@ class LDAPBackendAuthenticationTest(unittest2.TestCase):
         authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
         self.assertFalse(authenticated)
 
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'start_tls_s',
+        mock.MagicMock(return_value=None))
     @mock.patch.object(
         ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
         mock.MagicMock(return_value=None))

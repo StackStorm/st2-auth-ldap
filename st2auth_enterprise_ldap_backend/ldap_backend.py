@@ -77,10 +77,11 @@ class LDAPAuthenticationBackend(object):
     def authenticate(self, username, password):
         try:
             # Use CA cert bundle to validate certificate if present.
-            if self._use_tls and self._cacert:
-                ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._cacert)
-            elif self._use_tls and not self._cacert:
-                ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+            if self._use_ssl or self._use_tls:
+                if self._cacert:
+                    ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._cacert)
+                else:
+                    ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
          
             # Setup connection and options.
             protocol = 'ldaps' if self._use_ssl else 'ldap'
