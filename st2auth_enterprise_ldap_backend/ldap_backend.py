@@ -77,8 +77,9 @@ class LDAPAuthenticationBackend(object):
         self._use_ssl = use_ssl
         self._use_tls = use_tls
 
-        if cacert and not os.path.isfile(cacert): 
-            raise ValueError('Unable to find the cacert file "%s" for the LDAP connection.' % cacert)
+        if cacert and not os.path.isfile(cacert):
+            raise ValueError('Unable to find the cacert file "%s" for the LDAP connection.' %
+                             (cacert))
 
         self._cacert = cacert
 
@@ -90,7 +91,7 @@ class LDAPAuthenticationBackend(object):
                     ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._cacert)
                 else:
                     ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-         
+
             # Setup connection and options.
             protocol = 'ldaps' if self._use_ssl else 'ldap'
             endpoint = '%s://%s:%d' % (protocol, self._host, self._port)
@@ -101,19 +102,19 @@ class LDAPAuthenticationBackend(object):
 
             if self._use_tls:
                 connection.start_tls_s()
- 
+
             try:
                 # Bind using given username and password.
                 user_dn = '%s=%s,%s' % (self._id_attr, username, self._users_ou)
                 connection.simple_bind_s(user_dn, password)
                 LOG.info('Successfully authenticated user "%s".' % username)
                 return True
-            except Exception as e:
+            except Exception:
                 LOG.exception('Failed authenticating user "%s".' % username)
                 return False
             finally:
                 connection.unbind_s()
-        except ldap.LDAPError as e:
+        except ldap.LDAPError:
             LOG.exception('Unexpected LDAP configuration or connection error.')
             return False
 
