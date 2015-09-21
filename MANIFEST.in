@@ -1,1 +1,2 @@
+include dist_utils.py
 include requirements.txt
