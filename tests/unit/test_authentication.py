@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import ldap
+import os
 import mock
 import unittest2
 
@@ -23,7 +24,8 @@ from st2auth_enterprise_ldap_backend import ldap_backend
 LDAP_HOST = 'ldap202.uswest2.stackstorm.net'
 LDAPS_PORT = 636
 LDAP_USERS_OU = 'ou=users,dc=staging,dc=stackstorm,dc=net'
-LDAP_CACERT = '/home/wcchan/Downloads/cacert.pem'
+LDAP_CACERT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           '../fixtures/certs/cacert.pem')
 LDAP_USER_UID = 'jon'
 LDAP_USER_PASSWD = 'snow123'
 LDAP_USER_BAD_PASSWD = 'snow1234'
