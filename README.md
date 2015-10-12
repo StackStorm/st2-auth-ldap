@@ -9,16 +9,16 @@ sudo apt-get install -y python-dev libldap2-dev libsasl2-dev libssl-dev ldap-uti
 
 ### Configuration Options
 
-| option   | required | default | description                               |
-|----------|----------|---------|-------------------------------------------|
-| users_ou | yes      |         | OU of the user accounts                   |
-| host     | yes      |         | Hostname of the LDAP server               |
-| port     | yes      |         | Port of the LDAP server                   |
-| use_ssl  | no       | false   | Use LDAPS to connect                      |
-| use_tls  | no       | false   | Start TLS on LDAP to connect              |
-| cacert   | no       | None    | CA cert to validate certificate           |
-| id_attr  | no       | uid     | Field name of the user ID attribute       |
-| scope    | no       | subtree | Search scope (base, onelevel, or subtree) |
+| option   | required | default | description                                                |
+|----------|----------|---------|------------------------------------------------------------|
+| users_ou | yes      |         | OU of the user accounts                                    |
+| host     | yes      |         | Hostname of the LDAP server                                |
+| port     | yes      |         | Port of the LDAP server                                    |
+| use_ssl  | no       | false   | Use LDAPS to connect                                       |
+| use_tls  | no       | false   | Start TLS on LDAP to connect                               |
+| cacert   | no       | None    | Path to the CA cert used to validate certificate           |
+| id_attr  | no       | uid     | Field name of the user ID attribute                        |
+| scope    | no       | subtree | Search scope (base, onelevel, or subtree)                  |
 
 ### Configuration Example
 
