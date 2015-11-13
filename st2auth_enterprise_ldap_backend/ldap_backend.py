@@ -39,12 +39,14 @@ SEARCH_SCOPES = {
 class LDAPAuthenticationBackend(object):
 
     def __init__(self, users_ou, host, port=389, scope='subtree',
-                 id_attr='uid', use_ssl=False, use_tls=False, cacert=None):
+                 id_attr='uid', use_ssl=False, use_tls=False, cacert=None, bind_user=None, bind_pw=None):
 
         if not host:
             raise ValueError('Hostname for the LDAP server is not provided.')
 
         self._host = host
+        self._bind_pw = bind_pw
+        self._bind_user = bind_user
 
         if port:
             self._port = port
@@ -77,9 +79,8 @@ class LDAPAuthenticationBackend(object):
         self._use_ssl = use_ssl
         self._use_tls = use_tls
 
-        if cacert and not os.path.isfile(cacert):
-            raise ValueError('Unable to find the cacert file "%s" for the LDAP connection.' %
-                             (cacert))
+        if cacert and not os.path.isfile(cacert): 
+            raise ValueError('Unable to find the cacert file "%s" for the LDAP connection.' % cacert)
 
         self._cacert = cacert
 
@@ -91,10 +92,10 @@ class LDAPAuthenticationBackend(object):
                     ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._cacert)
                 else:
                     ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-
+         
             # Setup connection and options.
             protocol = 'ldaps' if self._use_ssl else 'ldap'
-            endpoint = '%s://%s:%d' % (protocol, self._host, int(self._port))
+            endpoint = '%s://%s:%d' % (protocol, self._host, self._port)
             connection = ldap.initialize(endpoint)
             connection.set_option(ldap.OPT_DEBUG_LEVEL, 255)
             connection.set_option(ldap.OPT_REFERRALS, 0)
@@ -102,19 +103,24 @@ class LDAPAuthenticationBackend(object):
 
             if self._use_tls:
                 connection.start_tls_s()
-
+ 
             try:
                 # Bind using given username and password.
                 user_dn = '%s=%s,%s' % (self._id_attr, username, self._users_ou)
-                connection.simple_bind_s(user_dn, password)
+
+                if self._bind_user is not None:
+                    connection.bind(self._bind_user, self._bind_pw)
+                    LOG.info("Successfully authenticated bind")
+                else:
+                    connection.simple_bind_s(user_dn, password)
                 LOG.info('Successfully authenticated user "%s".' % username)
                 return True
-            except Exception:
+            except Exception as e:
                 LOG.exception('Failed authenticating user "%s".' % username)
                 return False
             finally:
                 connection.unbind_s()
-        except ldap.LDAPError:
+        except ldap.LDAPError as e:
             LOG.exception('Unexpected LDAP configuration or connection error.')
             return False
 

@@ -14,6 +14,8 @@ sudo apt-get install -y python-dev libldap2-dev libsasl2-dev libssl-dev ldap-uti
 | users_ou | yes      |         | OU of the user accounts                                    |
 | host     | yes      |         | Hostname of the LDAP server                                |
 | port     | yes      |         | Port of the LDAP server                                    |
+| bind_user| no       |         | Username for bind authentication                           |
+| bind_pw  | no       |         | Password for bind authentication                           |
 | use_ssl  | no       | false   | Use LDAPS to connect                                       |
 | use_tls  | no       | false   | Start TLS on LDAP to connect                               |
 | cacert   | no       | None    | Path to the CA cert used to validate certificate           |
