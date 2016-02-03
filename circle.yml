@@ -1,0 +1,8 @@
+dependencies:
+  cache_directories:
+    - ~/.cache/pip
+
+test:
+  override:
+    - tox -e lint
+    - tox -e py27
