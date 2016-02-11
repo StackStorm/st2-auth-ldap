@@ -1,11 +1,20 @@
+checkout:
+  post:
+    - .circle/circlerc.sh
+
 dependencies:
   cache_directories:
     - ~/.cache/pip
 
 test:
   override:
-    - "[ $CIRCLE_NODE_INDEX = 0 ] && tox -e lint || :"
-    - "[ $CIRCLE_NODE_INDEX = 1 ] && tox -e py27 || :"
+    - ? |
+        step tox -e lint; next
+        step tox -e py27
+      : parallel: true
   post:
-    - dpkg-buildpackage -uc -us
+    - ? |
+          step dpkg-buildpackage -b -uc -us
+          step cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS
+      : parallel: true
     - ls -l $CIRCLE_ARTIFACTS
