@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import sys
+import re
 
 from distutils.version import StrictVersion
 
@@ -53,3 +54,16 @@ def fetch_requirements(requirements_file_path):
             links.append(str(req.link))
         reqs.append(str(req.req))
     return (reqs, links)
+
+
+def parse_version_string(file_path):
+    """
+    Parse __version__ = 'xxx' from the specifed file
+    """
+    version = None
+    with open(file_path, 'r') as fd:
+        match = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+                          fd.read(), re.MULTILINE)
+    if match:
+        version = match.group(1)
+    return version
