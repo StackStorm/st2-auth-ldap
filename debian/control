@@ -1,0 +1,16 @@
+Source: st2-auth-ldap
+Section: Python
+Priority: optional
+Maintainer: unknown <opsadmin@stackstorm.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: <insert the upstream URL, if relevant>
+#Vcs-Git: git://git.debian.org/collab-maint/st2-auth-ldap.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/st2-auth-ldap.git;a=summary
+
+Package: st2-auth-ldap
+Architecture: all
+Pre-Depends: st2
+Depends: ${misc:Depends}, st2, python-ldap
+Description: LDAP auth backend for st2
+  LDAP Authentication Backend for StackStorm Enterprise Edition
