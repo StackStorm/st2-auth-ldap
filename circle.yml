@@ -6,3 +6,6 @@ test:
   override:
     - "[ $CIRCLE_NODE_INDEX = 0 ] && tox -e lint || :"
     - "[ $CIRCLE_NODE_INDEX = 1 ] && tox -e py27 || :"
+  post:
+    - dpkg-buildpackage -uc -us
+    - ls -l $CIRCLE_ARTIFACTS
