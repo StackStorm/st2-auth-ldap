@@ -4,5 +4,5 @@ dependencies:
 
 test:
   override:
-    - tox -e lint
-    - tox -e py27
+    - "[ $CIRCLE_NODE_INDEX = 0 ] && tox -e lint || :"
+    - "[ $CIRCLE_NODE_INDEX = 1 ] && tox -e py27 || :"
