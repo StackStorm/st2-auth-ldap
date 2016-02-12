@@ -1,8 +1,3 @@
-PKG_NAME := st2-auth-ldap
-PKG_RELEASE ?= 1
-PKG_VERSION ?= 0.1
-WHEELSDIR ?= opt/stackstorm/share/wheels
-
 ifneq (,$(wildcard /usr/share/python/st2python/bin/python))
 	PATH := /usr/share/python/st2python/bin:$(PATH)
 endif
@@ -13,6 +8,12 @@ ifneq (,$(wildcard /etc/debian_version))
 else
 	REDHAT := 1
 endif
+
+PKG_NAME := st2-auth-ldap
+PKG_RELEASE ?= 1
+PKG_VERSION := $(shell python setup.py --version 2>/dev/null)
+WHEELSDIR ?= opt/stackstorm/share/wheels
+
 
 .PHONY: all install changelog install_wheel
 all:
