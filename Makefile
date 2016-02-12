@@ -30,3 +30,8 @@ endif
 install_wheel:
 	install -d $(DESTDIR)/$(WHEELSDIR)
 	python setup.py bdist_wheel -d $(DESTDIR)/$(WHEELSDIR)
+
+# This is arch-dependent step and it must be called only are prepared
+# environment, we will run it inside docker container. (from rpm spec)
+install_deps:
+	pip wheel --wheel-dir=$(DESTDIR)/$(WHEELSDIR) -r requirements.txt
