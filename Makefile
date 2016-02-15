@@ -1,6 +1,8 @@
-ifneq (,$(wildcard /usr/share/python/st2python/bin/python))
-	PATH := /usr/share/python/st2python/bin:$(PATH)
-endif
+SHELL := /bin/bash
+PKG_NAME := st2-auth-ldap
+PKG_RELEASE ?= 1
+PKG_VERSION := $(shell python2.7 setup.py --version 2>/dev/null)
+WHEELSDIR ?= opt/stackstorm/share/wheels
 
 ifneq (,$(wildcard /etc/debian_version))
 	DEBIAN := 1
@@ -8,11 +10,6 @@ ifneq (,$(wildcard /etc/debian_version))
 else
 	REDHAT := 1
 endif
-
-PKG_NAME := st2-auth-ldap
-PKG_RELEASE ?= 1
-PKG_VERSION := $(shell python setup.py --version 2>/dev/null)
-WHEELSDIR ?= opt/stackstorm/share/wheels
 
 
 .PHONY: all install changelog install_wheel
@@ -31,7 +28,13 @@ install_wheel:
 	install -d $(DESTDIR)/$(WHEELSDIR)
 	python2.7 setup.py bdist_wheel -d $(DESTDIR)/$(WHEELSDIR)
 
-# This is arch-dependent step and it must be called only are prepared
-# environment, we will run it inside docker container. (from rpm spec)
+# This step is arch-dependent and must be called only on prepared environment,
+# it's run inside stackstorm/buildpack container. Invoked from rpm spec.
 install_deps:
-	pip wheel --wheel-dir=$(DESTDIR)/$(WHEELSDIR) -r requirements.txt
+	pip2.7 wheel --wheel-dir=$(DESTDIR)/$(WHEELSDIR) -r requirements.txt
+	# Well welcome to enterprise (rhel).
+	# Hardcore workaround to make wheel installable on any platform.
+	cd $(DESTDIR)/$(WHEELSDIR); \
+		ls -1 *-cp27mu-*.whl | while read f; do \
+			mv $$f $$(echo $$f | sed "s/cp27mu/none/"); \
+		done
