@@ -1,6 +1,7 @@
 # LDAP Authentication Backend for StackStorm Enterprise Edition
 
-[![Build Status](https://magnum.travis-ci.com/StackStorm/st2-enterprise-auth-backend-ldap.svg?token=9VSoAP6mbfNshpDaAKvx&branch=master)](https://magnum.travis-ci.com/StackStorm/st2-enterprise-auth-backend-ldap) [![IRC](https://img.shields.io/irc/%23stackstorm.png)](http://webchat.freenode.net/?channels=stackstorm)
+[![Circle CI Build Status](https://circleci.com/gh/StackStorm/st2-enterprise-auth-backend-ldap.svg?style=svg)](https://circleci.com/gh/StackStorm/st2-enterprise-auth-backend-ldap)
+[![IRC](https://img.shields.io/irc/%23stackstorm.png)](http://webchat.freenode.net/?channels=stackstorm)
 
 ### Requirements
 ```
