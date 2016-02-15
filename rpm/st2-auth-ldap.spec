@@ -13,7 +13,7 @@ License:        Apache
 URL:            https://stackstorm.com/
 Source0:        st2-enterprise-auth-backend-ldap
 
-Requires: st2 openldap-devel
+Requires: st2 openldap
 
 %define _builddir %(pwd)
 %define _rpmdir %(pwd)/build
