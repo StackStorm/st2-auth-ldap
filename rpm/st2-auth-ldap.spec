@@ -1,4 +1,4 @@
-%define pkg_version %(python2.7 setup.py --version 2>/dev/null)
+%define pkg_version %(python setup.py --version 2>/dev/null)
 %define version %(echo "${PKG_VERSION:-%{pkg_version}}")
 %define release %(echo "${PKG_RELEASE:-1}")
 %define st2dir /opt/stackstorm

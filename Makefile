@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 PKG_NAME := st2-auth-ldap
 PKG_RELEASE ?= 1
-PKG_VERSION := $(shell python2.7 setup.py --version 2>/dev/null)
+PKG_VERSION := $(shell python setup.py --version 2>/dev/null)
 WHEELSDIR ?= opt/stackstorm/share/wheels
 
 ifneq (,$(wildcard /etc/debian_version))
@@ -26,12 +26,12 @@ endif
 
 install_wheel:
 	install -d $(DESTDIR)/$(WHEELSDIR)
-	python2.7 setup.py bdist_wheel -d $(DESTDIR)/$(WHEELSDIR)
+	python setup.py bdist_wheel -d $(DESTDIR)/$(WHEELSDIR)
 
 # This step is arch-dependent and must be called only on prepared environment,
 # it's run inside stackstorm/buildpack container. Invoked from rpm spec.
 install_deps:
-	pip2.7 wheel --wheel-dir=$(DESTDIR)/$(WHEELSDIR) -r requirements.txt
+	pip wheel --wheel-dir=$(DESTDIR)/$(WHEELSDIR) -r requirements.txt
 	# Well welcome to enterprise (rhel).
 	# Hardcore workaround to make wheel installable on any platform.
 	cd $(DESTDIR)/$(WHEELSDIR); \
