@@ -1,4 +1,4 @@
-st2-auth-ldap (1.1.0-1); urgency=low
+st2-auth-ldap (1.1.0-1) stable; urgency=low
 
   * Initial Release.
 
