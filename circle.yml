@@ -31,7 +31,7 @@ dependencies:
   cache_directories:
     - ~/.cache/pip
   pre:
-    - sudo apt-get install parallel jq
+    - sudo apt-get install jq
     - gem install package_cloud
   override:
     - docker pull stackstorm/buildpack:jessie
@@ -75,4 +75,7 @@ deployment:
       - feature/circleci
     owner: StackStorm
     commands:
-      - "parallel -v -j0 --line-buffer ~/st2-packages/.circle/packagecloud.sh deploy {} $CIRCLE_ARTIFACTS/{} ::: ${DISTROS}"
+      - |
+        for distro in ${DISTROS}; do
+          ~/st2-packages/.circle/packagecloud.sh deploy $distro $CIRCLE_ARTIFACTS/$distro
+        done
