@@ -66,4 +66,7 @@ def parse_version_string(file_path):
                           fd.read(), re.MULTILINE)
     if match:
         version = match.group(1)
+    else:
+        raise Exception('File %s doesn\'t contain __version__ = \'x.y.z\' string')
+
     return version
