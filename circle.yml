@@ -1,6 +1,22 @@
+machine:
+  environment:
+    docker_run:  "docker run -w /src -v ${PWD}/${CIRCLE_PROJECT_REPONAME}:/src"
+    ST2_PACKAGES_REPO: https://github.com/StackStorm/st2-packages
+    IS_ENTERPRISE: 1
+    DEPLOY_PACKAGES: 1
+  services:
+    - docker
+
 checkout:
   post:
+    - git clone --depth 1 ${ST2_PACKAGES_REPO} ~/st2-packages
     - .circle/circlerc.sh
+    - |
+      set -ex
+      PKG_VERSION=$(python setup.py --version 2>/dev/null)
+      PKG_RELEASE=$(~/st2-packages/.circle/packagecloud.sh next-revision trusty ${PKG_VERSION} st2-auth-ldap)
+      echo "export PKG_VERSION=${PKG_VERSION}" >> ~/.circlerc
+      echo "export PKG_RELEASE=${PKG_RELEASE}" >> ~/.circlerc
 
 dependencies:
   cache_directories:
@@ -12,12 +28,15 @@ dependencies:
         step 1 docker pull stackstorm/buildpack:centos7
       : parallel: true
 
+<<<<<<< HEAD
 machine:
   environment:
     docker_run:  "docker run -w /code/${CIRCLE_PROJECT_REPONAME} -v ${PWD}:/code"
   services:
     - docker
 
+=======
+>>>>>>> 20e25b7... Sort different artifacts in dirs
 test:
   pre:
     - ? |
@@ -29,10 +48,11 @@ test:
           step ${docker_run} stackstorm/buildpack:jessie dpkg-buildpackage -b -uc -us
           step cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS
           step ${docker_run} stackstorm/buildpack:centos6 rpmbuild -bb rpm/st2-auth-ldap.spec
-          step cp -r build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS
+          step cp -r build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el6
           next
+          step mkdir -p $CIRCLE_ARTIFACTS/el7
           step ${docker_run} stackstorm/buildpack:centos7 rpmbuild -bb rpm/st2-auth-ldap.spec
-          step cp -r build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS
+          step cp -r build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el7
       : parallel: true
 
 deployment:
