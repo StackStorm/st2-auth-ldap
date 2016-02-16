@@ -9,8 +9,8 @@ Homepage: <insert the upstream URL, if relevant>
 #Vcs-Browser: http://git.debian.org/?p=collab-maint/st2-auth-ldap.git;a=summary
 
 Package: st2-auth-ldap
-Architecture: all
+Architecture: any
 Pre-Depends: st2
-Depends: ${misc:Depends}, st2, python-ldap
+Depends: ${misc:Depends}, st2, libldap2
 Description: LDAP auth backend for st2
   LDAP Authentication Backend for StackStorm Enterprise Edition

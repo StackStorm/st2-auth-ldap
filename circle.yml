@@ -7,13 +7,14 @@ dependencies:
     - ~/.cache/pip
   override:
     - ? |
+        step 0 docker pull stackstorm/buildpack:jessie
         step 0 docker pull stackstorm/buildpack:centos6
         step 1 docker pull stackstorm/buildpack:centos7
       : parallel: true
 
 machine:
   environment:
-    docker_run:  "docker run -w /src -v ${PWD}/${CIRCLE_PROJECT_REPONAME}:/src"
+    docker_run:  "docker run -w /code/${CIRCLE_PROJECT_REPONAME} -v ${PWD}:/code"
   services:
     - docker
 
@@ -25,7 +26,7 @@ test:
       : parallel: true
   override:
     - ? |
-          step dpkg-buildpackage -b -uc -us
+          step ${docker_run} stackstorm/buildpack:jessie dpkg-buildpackage -b -uc -us
           step cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS
           step ${docker_run} stackstorm/buildpack:centos6 rpmbuild -bb rpm/st2-auth-ldap.spec
           step cp -r build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS

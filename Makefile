@@ -6,16 +6,16 @@ WHEELSDIR ?= opt/stackstorm/share/wheels
 
 ifneq (,$(wildcard /etc/debian_version))
 	DEBIAN := 1
-	DESTDIR ?= $(CURDIR)/debian/$(ST2_COMPONENT)
+	DESTDIR ?= $(CURDIR)/debian/$(PKG_NAME)
 else
 	REDHAT := 1
 endif
 
 
-.PHONY: all install changelog install_wheel
+.PHONY: all install changelog install_wheel install_deps
 all:
 
-install: changelog install_wheel
+install: changelog install_wheel install_deps
 
 changelog: .stamp-changelog
 .stamp-changelog:
@@ -29,7 +29,7 @@ install_wheel:
 	python setup.py bdist_wheel -d $(DESTDIR)/$(WHEELSDIR)
 
 # This step is arch-dependent and must be called only on prepared environment,
-# it's run inside stackstorm/buildpack container. Invoked from rpm spec.
+# it's run inside stackstorm/buildpack containers.
 install_deps:
 	pip wheel --wheel-dir=$(DESTDIR)/$(WHEELSDIR) -r requirements.txt
 	# Well welcome to enterprise (rhel).
