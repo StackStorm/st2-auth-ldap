@@ -16,7 +16,9 @@
 import os
 
 from setuptools import setup, find_packages
-from dist_utils import check_pip_version, fetch_requirements, parse_version_string
+from dist_utils import check_pip_version
+from dist_utils import fetch_requirements
+from dist_utils import parse_version_string
 
 check_pip_version()
 
