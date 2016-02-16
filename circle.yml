@@ -12,10 +12,11 @@ machine:
     DEPLOY_PACKAGES: 1
   services:
     - docker
+  post:
+    - cd ${CIRCLE_ARTIFACTS} && mkdir ${DISTROS}
 
 checkout:
   post:
-    - cd ${CIRCLE_ARTIFACTS} && mkdir ${DISTROS}
     - git clone --depth 1 ${ST2_PACKAGES_REPO} ~/st2-packages
     - .circle/circlerc.sh
     - |
@@ -61,11 +62,11 @@ test:
     # rpm build for el6
     - |
       ${docker_run} stackstorm/buildpack:centos6 rpmbuild -bb rpm/st2-auth-ldap.spec
-      mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el6
+      sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el6
     # rpm build for el7
     - |
       ${docker_run} stackstorm/buildpack:centos7 rpmbuild -bb rpm/st2-auth-ldap.spec
-      mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el7
+      sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el7
 
 deployment:
   publish:
