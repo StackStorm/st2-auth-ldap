@@ -37,7 +37,9 @@ test:
 
 deployment:
   publish:
-    branch: master
+    branch:
+      - master
+      - feature/circleci
     owner: StackStorm
     commands:
       - ? |
