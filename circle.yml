@@ -62,11 +62,11 @@ test:
     # rpm build for el6
     - |
       ${docker_run} stackstorm/buildpack:centos6 rpmbuild -bb rpm/st2-auth-ldap.spec
-      sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el6
+      sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el6 && rm -rf build
     # rpm build for el7
     - |
       ${docker_run} stackstorm/buildpack:centos7 rpmbuild -bb rpm/st2-auth-ldap.spec
-      sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el7
+      sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el7 && rm -rf build
 
 deployment:
   publish:
@@ -75,4 +75,4 @@ deployment:
       - feature/circleci
     owner: StackStorm
     commands:
-      - "parallel -v -j0 --line-buffer .circle/packagecloud.sh deploy {} $CIRCLE_ARTIFACTS/{} ::: ${DISTROS}"
+      - "parallel -v -j0 --line-buffer ~/st2-packages/.circle/packagecloud.sh deploy {} $CIRCLE_ARTIFACTS/{} ::: ${DISTROS}"
