@@ -9,6 +9,6 @@ Homepage: https://stackstorm.com/
 Package: st2-auth-ldap
 Architecture: amd64
 Pre-Depends: st2
-Depends: ${misc:Depends}, st2, libldap2
+Depends: ${misc:Depends}, st2, libldap-2.4-2
 Description: LDAP auth backend for st2
   LDAP Authentication Backend for StackStorm Enterprise Edition
