@@ -37,3 +37,12 @@ next() {
   fi
   export extCIRCLE_STEPNUM=$step_num
 }
+
+## Make an export line for the given variables in ~/.circlerc
+#
+circlerc_env() {
+  for e in $@; do
+    eval "value=\$$e"
+    echo "export ${e}=${value}" >> ~/.circlerc
+  done
+}

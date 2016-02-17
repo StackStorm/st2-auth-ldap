@@ -7,7 +7,7 @@ machine:
   environment:
     DISTROS: "wheezy jessie trusty el6 el7"
     docker_run:  "docker run -w /code/${CIRCLE_PROJECT_REPONAME} -v ${PWD}:/code"
-    ST2_PACKAGES_REPO: https://github.com/StackStorm/st2-packages
+    packagecloud_cliuri: "https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh"
     IS_ENTERPRISE: 1
     DEPLOY_PACKAGES: 1
   services:
@@ -17,15 +17,16 @@ machine:
 
 checkout:
   post:
-    - git clone --depth 1 ${ST2_PACKAGES_REPO} ~/st2-packages
+    - |
+      # Download packagecloud.sh upload script
+      wget -qO - ${packagecloud_cliuri} > .circle/packagecloud.sh
+      chmod 755 .circle/packagecloud.sh
     - .circle/circlerc.sh
     - |
       set -e
       PKG_VERSION=$(python setup.py --version 2>/dev/null)
-      PKG_RELEASE=$(~/st2-packages/.circle/packagecloud.sh next-revision trusty ${PKG_VERSION} st2-auth-ldap)
-      set -x
-      echo "export PKG_VERSION=${PKG_VERSION}" >> ~/.circlerc
-      echo "export PKG_RELEASE=${PKG_RELEASE}" >> ~/.circlerc
+      PKG_RELEASE=$(.circle/packagecloud.sh next-revision trusty ${PKG_VERSION} st2-auth-ldap)
+      circlerc_env PKG_VERSION PKG_RELEASE
 
 dependencies:
   cache_directories:
@@ -80,5 +81,5 @@ deployment:
     commands:
       - |
         for distro in ${DISTROS}; do
-          ~/st2-packages/.circle/packagecloud.sh deploy $distro $CIRCLE_ARTIFACTS/$distro
+          .circle/packagecloud.sh deploy $distro $CIRCLE_ARTIFACTS/$distro
         done
