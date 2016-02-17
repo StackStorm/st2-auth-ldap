@@ -20,7 +20,7 @@ step() {
 
   if [ $node_num = $CIRCLE_NODE_INDEX ]; then
     # Execute command (which is all args passed to the function)
-    echo "Executing command: \`$@' ..."
+    echo -e "\nExecuting command: \`$@' ==>"
     $@
   fi
 }
