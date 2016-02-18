@@ -30,7 +30,6 @@ Requires: st2 openldap
 
 %install
   %make_install
-  make DESTDIR=%{buildroot} install_deps
 
 %clean
   rm -rf %{buildroot}
