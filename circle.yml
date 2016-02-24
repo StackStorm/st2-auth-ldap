@@ -8,7 +8,7 @@ machine:
     IS_ENTERPRISE: 1
     DEPLOY_PACKAGES: 1
     DISTROS: wheezy jessie trusty el6 el7
-    docker_distros: wheezy jessie trusty centos6 centos7
+    docker_distros: wheezy centos6 centos7
     docker_run: |-
                   docker run -w /code/${CIRCLE_PROJECT_REPONAME} -v ${PWD}:/code
                     -e PKG_VERSION=\$PKG_VERSION
@@ -30,6 +30,11 @@ dependencies:
         for dist in $docker_distros; do
           step docker pull stackstorm/buildpack:$dist
         done
+    - |
+        set -e
+        PKG_VERSION=$(python setup.py --version 2>/dev/null)
+        PKG_RELEASE=$(.circle/packagecloud.sh next-revision wheezy ${PKG_VERSION} st2-auth-ldap)
+        circlerc_env PKG_VERSION PKG_RELEASE
 
 checkout:
   post:
@@ -38,11 +43,6 @@ checkout:
         # Download packagecloud.sh upload script
         wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
         chmod 755 .circle/packagecloud.sh
-    - |
-        set -e
-        PKG_VERSION=$(python setup.py --version 2>/dev/null)
-        PKG_RELEASE=$(.circle/packagecloud.sh next-revision trusty ${PKG_VERSION} st2-auth-ldap)
-        circlerc_env PKG_VERSION PKG_RELEASE
 
 test:
   pre:
@@ -53,20 +53,16 @@ test:
   override:
     # Build packages for supported distros on native OS inside stackstorm/buildpack container.
     - |
-        eval ${docker_run} stackstorm/buildpack:wheezy dpkg-buildpackage -b -uc -us
+        eval ${docker_run} stackstorm/buildpack:wheezy make deb
         cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/wheezy
-    - |
-        eval ${docker_run} stackstorm/buildpack:jessie dpkg-buildpackage -b -uc -us
         cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/jessie
-    - |
-        eval ${docker_run} stackstorm/buildpack:trusty dpkg-buildpackage -b -uc -us
         cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/trusty
     - |
-        eval ${docker_run} stackstorm/buildpack:centos6 rpmbuild -bb rpm/st2-auth-ldap.spec
-        sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el6 && sudo rm -rf build
+        eval ${docker_run} stackstorm/buildpack:centos6 make rpm
+        sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el6
     - |
-        eval ${docker_run} stackstorm/buildpack:centos7 rpmbuild -bb rpm/st2-auth-ldap.spec
-        sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el7 && sudo rm -rf build
+        eval ${docker_run} stackstorm/buildpack:centos7 make rpm
+        sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el7
 
 deployment:
   publish:
