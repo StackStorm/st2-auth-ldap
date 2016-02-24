@@ -20,7 +20,7 @@ step() {
 
   if [ $node_num = $CIRCLE_NODE_INDEX ]; then
     # Execute command (which is all args passed to the function)
-    echo "Executing command: \`$@' ..."
+    echo -e "\nExecuting command: \`$@' ==>"
     $@
   fi
 }
@@ -36,4 +36,13 @@ next() {
     step_num=$1
   fi
   export extCIRCLE_STEPNUM=$step_num
+}
+
+## Make an export line for the given variables in ~/.circlerc
+#
+circlerc_env() {
+  for e in $@; do
+    eval "value=\$$e"
+    echo "export ${e}=${value}" >> ~/.circlerc
+  done
 }
