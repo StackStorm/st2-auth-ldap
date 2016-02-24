@@ -1,6 +1,6 @@
 %define pkg_version %(python setup.py --version 2>/dev/null)
 %define version %(echo "${PKG_VERSION:-%{pkg_version}}")
-%define epoch %(_epoch=`echo %{version} | grep -q dev || echo 1`; echo "${_epoch:-0}")
+#define epoch %(_epoch=`echo %{version} | grep -q dev || echo 1`; echo "${_epoch:-0}")
 %define release %(echo "${PKG_RELEASE:-1}")
 %define st2dir /opt/stackstorm
 %define st2wheels %{st2dir}/share/wheels
@@ -8,7 +8,7 @@
 
 Name:           st2-auth-ldap
 Version:        %{version}
-%if 0%{epoch}
+%if 0%{?epoch}
 Epoch: %{epoch}
 %endif
 Release:        %{release}

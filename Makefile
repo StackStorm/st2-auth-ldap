@@ -4,7 +4,7 @@ PKG_RELEASE ?= 1
 PKG_VERSION := $(shell python setup.py --version 2>/dev/null)
 WHEELSDIR ?= opt/stackstorm/share/wheels
 CHANGELOG_COMMENT ?= "automated build, version: $(PKG_VERSION)"
-DEB_EPOCH := $(shell echo $(PKG_VERSION) | grep -q dev || echo '1')
+#DEB_EPOCH := $(shell echo $(PKG_VERSION) | grep -q dev || echo '1')
 DEB_DISTRO := $(shell [ -z $(DEB_EPOCH) ] && echo unstable || echo stable)
 
 .PHONY: all install install_wheel install_deps deb rpm
