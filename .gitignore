@@ -61,3 +61,6 @@ debian/st2-auth-ldap.*
 
 # Makefile stamps
 .stamp-*
+
+# Virtual environments
+.venv/
