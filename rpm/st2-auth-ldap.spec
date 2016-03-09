@@ -12,8 +12,8 @@ Version:        %{version}
 Epoch: %{epoch}
 %endif
 Release:        %{release}
+License:        StackStorm Enterprise EULA
 Summary:        LDAP auth backend for st2
-License:        Apache
 URL:            https://stackstorm.com/
 Source0:        st2-enterprise-auth-backend-ldap
 
@@ -45,4 +45,5 @@ Requires: st2 openldap
   echo y | %{pip} uninstall st2-enterprise-auth-backend-ldap 1>/dev/null || :
 
 %files
+  %doc rpm/LICENSE
   %{st2wheels}/*
