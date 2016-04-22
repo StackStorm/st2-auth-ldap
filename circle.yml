@@ -23,6 +23,7 @@ dependencies:
     - ~/.cache/pip
   pre:
     - sudo apt-get install jq
+    - pip install tox
     - gem install package_cloud
   override:
     - |
