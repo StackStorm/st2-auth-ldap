@@ -39,6 +39,7 @@ dependencies:
 
 checkout:
   post:
+    - .circle/buildenv.sh
     - .circle/circlerc.sh
     - |
         # Download packagecloud.sh upload script
