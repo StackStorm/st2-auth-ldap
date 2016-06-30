@@ -16,7 +16,6 @@ write_env() {
 }
 
 fetch_version() {
-  cat
   if [ -f ${circle_dir}/../st2auth_enterprise_ldap_backend/__init__.py ]; then
     # Get st2 version based on hardcoded string in st2common
     # build takes place in `st2-enterprise-auth-backend-ldap` repo
@@ -28,7 +27,7 @@ PKG_VERSION=$(fetch_version)
 
 # for PackageCloud
 if [ -z "$CIRCLE_PR_REPONAME" ]; then
-  PKG_RELEASE=$(${circle_dir}/packagecloud.sh next-revision "${DISTRO}" "${PKG_VERSION}" st2-enterprise-auth-backend-ldap)
+  PKG_RELEASE=$(${circle_dir}/packagecloud.sh next-revision "${DISTRO}" "${PKG_VERSION}" st2-auth-ldap)
 else
   # is fork
   PKG_RELEASE=1

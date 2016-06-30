@@ -18,6 +18,14 @@ machine:
   post:
     - cd ${CIRCLE_ARTIFACTS} && mkdir ${DISTROS}
 
+checkout:
+  post:
+    - .circle/circlerc.sh
+    - |
+        # Download packagecloud.sh upload script
+        wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
+        chmod 755 .circle/packagecloud.sh
+
 dependencies:
   cache_directories:
     - ~/.cache/pip
@@ -31,20 +39,7 @@ dependencies:
         for dist in $docker_distros; do
           step docker pull stackstorm/buildpack:$dist
         done
-    - |
-        set -e
-        PKG_VERSION=$(python setup.py --version 2>/dev/null)
-        PKG_RELEASE=$(.circle/packagecloud.sh next-revision wheezy ${PKG_VERSION} st2-auth-ldap)
-        circlerc_env PKG_VERSION PKG_RELEASE
-
-checkout:
-  post:
     - .circle/buildenv.sh
-    - .circle/circlerc.sh
-    - |
-        # Download packagecloud.sh upload script
-        wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
-        chmod 755 .circle/packagecloud.sh
 
 test:
   pre:
@@ -55,6 +50,7 @@ test:
   override:
     # Build packages for supported distros on native OS inside stackstorm/buildpack container.
     - |
+        echo $PKG_VERSION $PKG_RELEASE
         eval ${docker_run} stackstorm/buildpack:wheezy make deb
         cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/wheezy
         cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/jessie
