@@ -1,0 +1,4 @@
+dn: cn=testers_posix,ou=groups,dc=stackstorm,dc=net
+changetype: modify
+add: memberuid
+memberuid: stanley103

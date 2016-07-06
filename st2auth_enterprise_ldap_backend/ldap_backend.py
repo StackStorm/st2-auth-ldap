@@ -150,12 +150,20 @@ class LDAPAuthenticationBackend(object):
                 return False
 
             # Search if user is member of pre-defined groups.
+            # The query on member is included for groupOfNames.
+            # The query on uniqueMember is included for groupOfUniqueNames.
+            # The query on memberUid is included for posixGroup.
             try:
-                query = '(|(&(objectClass=*)(|(member={0})(uniqueMember={0}))))'.format(user_dn)
+                query_str = '(|(&(objectClass=*)(|(member={0})(uniqueMember={0})(memberUid={1}))))'
+                query = query_str.format(user_dn, username)
                 result = connection.search_s(self._base_ou, self._scope, query, [])
                 entries = [entry[0] for entry in result if entry[0] is not None] if result else []
 
-                if not list(set(self._group_dns) & set(entries)):
+                # Assume group entrie are not case sensitive.
+                groups = [entry.lower() for entry in self._group_dns]
+                entries = [entry.lower() for entry in entries]
+
+                if not list(set(groups) & set(entries)):
                     LOG.exception('Unable to verify membership for user "%s".' % username)
                     return False
             except Exception:
