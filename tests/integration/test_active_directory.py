@@ -13,47 +13,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ldap
 import os
-import mock
 import unittest2
-import uuid
 
 from st2auth_enterprise_ldap_backend import ldap_backend
 
 
-LDAP_HOST = '127.0.0.1'
-LDAP_BIND_DN = 'cn=Administrator,cn=users,dc=stackstorm,dc=net'
-LDAP_BIND_PASSWORD = uuid.uuid4().hex
-LDAP_BASE_OU = 'dc=stackstorm,dc=net'
-LDAP_GROUP_DNS = ['cn=testers,dc=stackstorm,dc=net']
-LDAP_ID_ATTR = 'sAMAccountName'
-LDAP_USER_UID = 'jon'
-LDAP_USER_PASSWD = 'snow123'
-LDAP_USER_BAD_PASSWD = 'snow1234'
-
-LDAP_USER_SEARCH_RESULT = [('cn=Jon Snow,cn=users,dc=stackstorm,dc=net', [])]
-LDAP_GROUP_SEARCH_RESULT = [('cn=testers,dc=stackstorm,dc=net', [])]
-
-
 class ActiveDirectoryAuthenticationTest(unittest2.TestCase):
 
-    @mock.patch.object(
-        ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-        mock.MagicMock(return_value=None))
-    @mock.patch.object(
-        ldap.ldapobject.SimpleLDAPObject, 'search_s',
-        mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    @classmethod
+    def setUpClass(cls):
+        super(ActiveDirectoryAuthenticationTest, cls).setUpClass()
+        cls.ldap_host = os.environ.get('ST2_LDAP_HOST', '127.0.0.1')
+        cls.ldap_bind_dn = os.environ.get('ST2_LDAP_BIND_DN', 'cn=admin,dc=stackstorm,dc=net')
+        cls.ldap_bind_pass = os.environ.get('ST2_LDAP_BIND_PASS', 'foobar')
+        cls.ldap_base_ou = os.environ.get('ST2_LDAP_BASE_OU', 'dc=stackstorm,dc=net')
+        cls.ldap_id_attr = os.environ.get('ST2_LDAP_ID_ATTR', 'sAMAccountName')
+
     def test_authenticate(self):
+        ldap_group_dns = ['cn=testers,ou=groups,dc=stackstorm,dc=net']
+        ldap_user_uid = 'stanley'
+        ldap_user_passwd = 'stanl3y!'
+
         backend = ldap_backend.LDAPAuthenticationBackend(
-            LDAP_BIND_DN,
-            LDAP_BIND_PASSWORD,
-            LDAP_BASE_OU,
-            LDAP_GROUP_DNS,
-            LDAP_HOST,
-            id_attr=LDAP_ID_ATTR
+            self.ldap_bind_dn,
+            self.ldap_bind_pass,
+            self.ldap_base_ou,
+            ldap_group_dns,
+            self.ldap_host,
+            id_attr=self.ldap_id_attr
         )
 
-        authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_PASSWD)
+        authenticated = backend.authenticate(ldap_user_uid, ldap_user_passwd)
 
         self.assertTrue(authenticated)
