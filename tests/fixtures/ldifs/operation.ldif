@@ -1,4 +1,0 @@
-dn: ou=operation,ou=groups,dc=staging,dc=stackstorm,dc=net
-objectClass: top
-objectClass: organizationalUnit
-ou: operation
