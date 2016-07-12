@@ -1,0 +1,5 @@
+dn: cn=testers_unique,ou=groups,dc=stackstorm,dc=net
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: testers_unique
+uniqueMember:

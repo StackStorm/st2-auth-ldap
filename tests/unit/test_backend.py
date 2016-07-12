@@ -31,15 +31,15 @@ LDAP_CACERT = '../fixtures/certs/cacert.pem'
 LDAP_CACERT_REAL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), LDAP_CACERT)
 LDAP_BASE_OU = 'dc=stackstorm,dc=net'
 LDAP_ID_ATTR = 'uid'
-LDAP_USER_UID = 'jon'
-LDAP_USER_PASSWD = 'snow123'
-LDAP_USER_BAD_PASSWD = 'snow1234'
+LDAP_USER_UID = 'stanley'
+LDAP_USER_PASSWD = 'st@nl3y'
+LDAP_USER_BAD_PASSWD = 'badbot'
 
-LDAP_USER_SEARCH_RESULT = [('cn=Jon Snow,cn=users,dc=stackstorm,dc=net', [])]
+LDAP_USER_SEARCH_RESULT = [('cn=Stormin Stanley,cn=users,dc=stackstorm,dc=net', [])]
 LDAP_GROUP_SEARCH_RESULT = [('cn=testers,dc=stackstorm,dc=net', [])]
 
 
-class OpenLDAPAuthenticationTest(unittest2.TestCase):
+class LDAPBackendTest(unittest2.TestCase):
 
     @mock.patch.object(
         ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',

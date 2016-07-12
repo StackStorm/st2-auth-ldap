@@ -1,4 +1,4 @@
-dn: ou=users,dc=staging,dc=stackstorm,dc=net
+dn: ou=users,dc=stackstorm,dc=net
 objectClass: top
 objectClass: organizationalUnit
 ou: users
