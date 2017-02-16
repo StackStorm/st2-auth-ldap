@@ -42,7 +42,9 @@ Requires: st2 openldap
   %{pip} install --find-links %{st2wheels} --no-index --quiet st2-enterprise-auth-backend-ldap
 
 %postun
-  echo y | %{pip} uninstall st2-enterprise-auth-backend-ldap 1>/dev/null || :
+  if [ $1 -eq 0 ]; then
+    echo y | %{pip} uninstall st2-enterprise-auth-backend-ldap 1>/dev/null || :
+  fi
 
 %files
   %doc rpm/LICENSE
