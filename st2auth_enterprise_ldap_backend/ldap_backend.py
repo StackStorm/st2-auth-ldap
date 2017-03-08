@@ -23,6 +23,8 @@ import logging
 import ldap
 import ldapurl
 
+from st2auth.backends.constants import AuthBackendCapability
+
 __all__ = [
     'LDAPAuthenticationBackend'
 ]
@@ -37,6 +39,10 @@ SEARCH_SCOPES = {
 
 
 class LDAPAuthenticationBackend(object):
+    CAPABILITIES = (
+        AuthBackendCapability.CAN_AUTHENTICATE_USER,
+        AuthBackendCapability.HAS_GROUP_INFORMATION
+    )
 
     def __init__(self, bind_dn, bind_password, base_ou, group_dns, host, port=389,
                  scope='subtree', id_attr='uid', use_ssl=False, use_tls=False, cacert=None):
