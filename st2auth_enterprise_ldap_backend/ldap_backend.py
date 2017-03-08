@@ -196,5 +196,7 @@ class LDAPAuthenticationBackend(object):
         finally:
             self._clear_connection(connection)
 
+        return False
+
     def get_user(self, username):
         pass
