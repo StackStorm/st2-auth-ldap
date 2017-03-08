@@ -41,6 +41,7 @@ SEARCH_SCOPES = {
 class LDAPAuthenticationBackend(object):
     CAPABILITIES = (
         AuthBackendCapability.CAN_AUTHENTICATE_USER,
+        AuthBackendCapability.HAS_USER_INFORMATION,
         AuthBackendCapability.HAS_GROUP_INFORMATION
     )
 
@@ -183,7 +184,26 @@ class LDAPAuthenticationBackend(object):
             self._clear_connection(connection)
 
     def get_user(self, username):
-        pass
+        """
+        Retrieve user information.
+
+        :rtype: ``dict``
+        """
+        connection = None
+
+        try:
+            connection = self._init_connection()
+            connection.simple_bind_s(self._bind_dn, self._bind_password)
+
+            _, user_info = self._get_user(connection=connection, username=username)
+        except Exception:
+            LOG.exception('Failed to retrieve details for user "%s"' % (username))
+            return None
+        finally:
+            self._clear_connection(connection)
+
+        user_info = dict(user_info)
+        return user_info
 
     def get_groups(self, username):
         """
@@ -200,15 +220,21 @@ class LDAPAuthenticationBackend(object):
                                                username=username)
         except Exception:
             LOG.exception('Failed to retrieve groups for user "%s"' % (username))
-            return False
+            return None
         finally:
             self._clear_connection(connection)
 
         return groups
 
     def _get_user_dn(self, connection, username):
+        user_dn, _ = self._get_user(connection=connection, username=username)
+        return user_dn
+
+    def _get_user(self, connection, username):
         """
-        Retrieve user dn record for the provided username.
+        Retrieve LDAP user record for the provided username.
+
+        :rtype: ``tuple`` (``user_dn``, ``user_info_dict``)
         """
         query = '%s=%s' % (self._id_attr, username)
         result = connection.search_s(self._base_ou, self._scope, query, [])
@@ -222,8 +248,8 @@ class LDAPAuthenticationBackend(object):
             msg = ('More than one users identified for "%s".' % (query))
             raise ValueError(msg)
 
-        user_dn = entries[0][0]
-        return user_dn
+        user_tuple = entries[0]
+        return user_tuple
 
     def _get_groups_for_user(self, connection, user_dn, username):
         """
