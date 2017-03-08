@@ -69,7 +69,7 @@ LDAP_USER_INFO_DICT = {
     'whenCreated': ['20160731093701.0Z']
 }
 LDAP_USER_SEARCH_RESULT = [('cn=Stormin Stanley,cn=users,dc=stackstorm,dc=net', LDAP_USER_INFO_DICT)]
-LDAP_GROUP_SEARCH_RESULT = [('cn=testers,dc=stackstorm,dc=net', [])]
+LDAP_GROUP_SEARCH_RESULT = [('cn=testers,dc=stackstorm,dc=net', ()), ('cn=stormers,dc=stackstorm,dc=net', ())]
 
 
 class LDAPBackendTest(unittest2.TestCase):
@@ -312,3 +312,27 @@ class LDAPBackendTest(unittest2.TestCase):
         self.assertEqual(user_info['displayName'], ['Tomaz Muraus'])
         self.assertEqual(user_info['givenName'], ['Tomaz'])
         self.assertEqual(user_info['primaryGroupID'], ['513'])
+
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'search_s',
+        mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    def test_get_user(self):
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR
+        )
+
+        expected = [
+            'cn=testers,dc=stackstorm,dc=net',
+            'cn=stormers,dc=stackstorm,dc=net'
+        ]
+
+        groups = backend.get_groups(username=LDAP_USER_UID)
+        self.assertEqual(groups, expected)
