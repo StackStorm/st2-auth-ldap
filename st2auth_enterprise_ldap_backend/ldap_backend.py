@@ -141,19 +141,10 @@ class LDAPAuthenticationBackend(object):
 
             # Search for user and fetch the DN of the record.
             try:
-                query = '%s=%s' % (self._id_attr, username)
-                result = connection.search_s(self._base_ou, self._scope, query, [])
-                entries = [entry for entry in result if entry[0] is not None] if result else []
-
-                if len(entries) <= 0:
-                    LOG.exception('Unable to identify user for "%s".' % query)
-                    return False
-
-                if len(entries) > 1:
-                    LOG.exception('More than one users identified for "%s".' % query)
-                    return False
-
-                user_dn = entries[0][0]
+                user_dn = self._get_user_dn(connection=connection, username=username)
+            except ValueError as e:
+                LOG.exception(str(e))
+                return False
             except Exception:
                 LOG.exception('Unexpected error when querying for user "%s".' % username)
                 return False
@@ -163,16 +154,14 @@ class LDAPAuthenticationBackend(object):
             # The query on uniqueMember is included for groupOfUniqueNames.
             # The query on memberUid is included for posixGroup.
             try:
-                query_str = '(|(&(objectClass=*)(|(member={0})(uniqueMember={0})(memberUid={1}))))'
-                query = query_str.format(user_dn, username)
-                result = connection.search_s(self._base_ou, self._scope, query, [])
-                entries = [entry[0] for entry in result if entry[0] is not None] if result else []
+                groups = self._get_groups_for_user(connection=connection, user_dn=user_dn,
+                                                   username=username)
 
-                # Assume group entrie are not case sensitive.
-                groups = [entry.lower() for entry in self._group_dns]
-                entries = [entry.lower() for entry in entries]
+                # Assume group entries are not case sensitive.
+                groups = [entry.lower() for entry in groups]
+                required_groups = [entry.lower() for entry in self._group_dns]
 
-                if not list(set(groups) & set(entries)):
+                if not list(set(required_groups) & set(groups)):
                     LOG.exception('Unable to verify membership for user "%s".' % username)
                     return False
             except Exception:
@@ -198,3 +187,56 @@ class LDAPAuthenticationBackend(object):
 
     def get_user(self, username):
         pass
+
+    def get_groups(self, username):
+        """
+        Return a list of all the groups user is a member of.
+        """
+        connection = None
+
+        try:
+            connection = self._init_connection()
+            connection.simple_bind_s(self._bind_dn, self._bind_password)
+
+            user_dn = self._get_user_dn(connection=connection, username=username)
+            groups = self._get_groups_for_user(connection=connection, user_dn=user_dn,
+                                               username=username)
+        except Exception:
+            LOG.exception('Failed to retrieve groups for user "%s"' % (username))
+            return False
+        finally:
+            self._clear_connection(connection)
+
+        return groups
+
+    def _get_user_dn(self, connection, username):
+        """
+        Retrieve user dn record for the provided username.
+        """
+        query = '%s=%s' % (self._id_attr, username)
+        result = connection.search_s(self._base_ou, self._scope, query, [])
+        entries = [entry for entry in result if entry[0] is not None] if result else []
+
+        if len(entries) <= 0:
+            msg = ('Unable to identify user for "%s".' % (query))
+            raise ValueError(msg)
+
+        if len(entries) > 1:
+            msg = ('More than one users identified for "%s".' % (query))
+            raise ValueError(msg)
+
+        user_dn = entries[0][0]
+        return user_dn
+
+    def _get_groups_for_user(self, connection, user_dn, username):
+        """
+        Return a list of all the groups user is a member of.
+
+        :rtype: ``list`` of ``str``
+        """
+        query_str = '(|(&(objectClass=*)(|(member={0})(uniqueMember={0})(memberUid={1}))))'
+        query = query_str.format(user_dn, username)
+        result = connection.search_s(self._base_ou, self._scope, query, [])
+        groups = [entry[0] for entry in result if entry[0] is not None] if result else []
+
+        return groups
