@@ -35,7 +35,40 @@ LDAP_USER_UID = 'stanley'
 LDAP_USER_PASSWD = 'st@nl3y'
 LDAP_USER_BAD_PASSWD = 'badbot'
 
-LDAP_USER_SEARCH_RESULT = [('cn=Stormin Stanley,cn=users,dc=stackstorm,dc=net', [])]
+LDAP_USER_INFO_DICT = {
+    'accountExpires': ['9223372036854775807'],
+    'badPasswordTime': ['0'],
+    'badPwdCount': ['0'],
+    'cn': ['Tomaz Muraus'],
+    'codePage': ['0'],
+    'countryCode': ['0'],
+    'displayName': ['Tomaz Muraus'],
+    'distinguishedName': ['CN=Tomaz Muraus,OU=stormers,DC=stackstorm,DC=net'],
+    'givenName': ['Tomaz'],
+    'instanceType': ['4'],
+    'lastLogoff': ['0'],
+    'lastLogon': ['131144315509626450'],
+    'lastLogonTimestamp': ['131326807618683640'],
+    'logonCount': ['0'],
+    'memberOf': ['CN=stormers,OU=groups,DC=stackstorm,DC=net',
+                 'CN=testers,OU=groups,DC=stackstorm,DC=net'],
+    'name': ['Tomaz Muraus'],
+    'objectCategory': ['CN=Person,CN=Schema,CN=Configuration,DC=stackstorm,DC=net'],
+    'objectClass': ['top', 'person', 'organizationalPerson', 'user'],
+    'objectGUID': ['\x1cR\xca\x12\x8a\xda\x8eL\xabe\xcfp\xda\x17H\xf7'],
+    'primaryGroupID': ['513'],
+    'pwdLastSet': ['131144314220000000'],
+    'sAMAccountName': ['tomaz'],
+    'sAMAccountType': ['805306368'],
+    'sn': ['Muraus'],
+    'uSNChanged': ['9835'],
+    'uSNCreated': ['3550'],
+    'userAccountControl': ['512'],
+    'userPrincipalName': ['tomaz@stackstorm.net'],
+    'whenChanged': ['20170227145241.0Z'],
+    'whenCreated': ['20160731093701.0Z']
+}
+LDAP_USER_SEARCH_RESULT = [('cn=Stormin Stanley,cn=users,dc=stackstorm,dc=net', LDAP_USER_INFO_DICT)]
 LDAP_GROUP_SEARCH_RESULT = [('cn=testers,dc=stackstorm,dc=net', [])]
 
 
@@ -257,3 +290,25 @@ class LDAPBackendTest(unittest2.TestCase):
         authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_PASSWD)
 
         self.assertTrue(authenticated)
+
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'search_s',
+        mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    def test_get_user(self):
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR
+        )
+
+        user_info = backend.get_user(username=LDAP_USER_UID)
+        self.assertEqual(user_info['cn'], ['Tomaz Muraus'])
+        self.assertEqual(user_info['displayName'], ['Tomaz Muraus'])
+        self.assertEqual(user_info['givenName'], ['Tomaz'])
+        self.assertEqual(user_info['primaryGroupID'], ['513'])
