@@ -24,6 +24,7 @@ dependencies:
   pre:
     - sudo apt-get install jq
     - gem install package_cloud
+    - make .clone_st2_repo
     - make requirements
   override:
     - |
