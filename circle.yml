@@ -48,9 +48,9 @@ checkout:
 
 test:
   pre:
-    - |
-       step make .lint; next
-       step make .unit-tests
+    - ? |
+        step make .lint; next
+        step make .unit-tests
       : parallel: true
   override:
     # Build packages for supported distros on native OS inside stackstorm/buildpack container.
