@@ -49,11 +49,9 @@ checkout:
 test:
   pre:
     - |
-       cat virtualenv/bin/activate
-       ls -la /tmp/st2/
-       make play
-       make .lint
-       make .unit-tests
+       step make .lint; next
+       step make .unit-tests
+      : parallel: true
   override:
     # Build packages for supported distros on native OS inside stackstorm/buildpack container.
     - |
