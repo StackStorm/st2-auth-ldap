@@ -48,8 +48,8 @@ checkout:
 test:
   pre:
     - ? |
-        step make .lint; next
-        step make .unit-tests
+        step make .clone_st2_repo .lint; next
+        step make .clone_st2_repo unit-tests
       : parallel: true
   override:
     # Build packages for supported distros on native OS inside stackstorm/buildpack container.
