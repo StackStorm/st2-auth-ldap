@@ -216,9 +216,11 @@ class LDAPAuthenticationBackend(object):
         user_info = dict(user_info)
         return user_info
 
-    def get_groups(self, username):
+    def get_user_groups(self, username):
         """
         Return a list of all the groups user is a member of.
+
+        :rtype: ``list`` of ``str``
         """
         connection = None
 
