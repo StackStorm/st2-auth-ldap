@@ -18,7 +18,7 @@ PIP_OPTIONS := $(ST2_PIP_OPTIONS)
 space_char :=
 space_char +=
 comma := ,
-COMPONENTS := $(wildcard $(ST2_REPO_PATH)/st2*)
+COMPONENTS = $(wildcard $(ST2_REPO_PATH)/st2*)
 COMPONENT_PYTHONPATH = $(subst $(space_char),:,$(realpath $(COMPONENTS)))
 
 .PHONY: play
