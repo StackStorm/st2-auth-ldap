@@ -22,8 +22,8 @@ dependencies:
   cache_directories:
     - ~/.cache/pip
   pre:
+    - make requirements
     - sudo apt-get install jq
-    - pip install tox
     - gem install package_cloud
   override:
     - |
@@ -48,8 +48,8 @@ checkout:
 test:
   pre:
     - ? |
-        step tox -e lint; next
-        step tox -e py27
+        step make .lint; next
+        step make .unit-tests
       : parallel: true
   override:
     # Build packages for supported distros on native OS inside stackstorm/buildpack container.

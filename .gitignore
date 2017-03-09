@@ -64,3 +64,4 @@ debian/st2-auth-ldap.*
 
 # Virtual environments
 .venv/
+virtualenv/
