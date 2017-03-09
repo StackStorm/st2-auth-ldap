@@ -319,7 +319,7 @@ class LDAPBackendTest(unittest2.TestCase):
     @mock.patch.object(
         ldap.ldapobject.SimpleLDAPObject, 'search_s',
         mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
-    def test_get_user(self):
+    def test_get_user_groups(self):
         backend = ldap_backend.LDAPAuthenticationBackend(
             LDAP_BIND_DN,
             LDAP_BIND_PASSWORD,
