@@ -10,19 +10,21 @@ sudo apt-get install -y python-dev libldap2-dev libsasl2-dev libssl-dev ldap-uti
 
 ### Configuration Options
 
-| option        | required | default | description                                                |
-|---------------|----------|---------|------------------------------------------------------------|
-| bind_dn       | yes      |         | DN of the service account to bind with the LDAP server     |
-| bind_password | yes      |         | Password of the service account                            |
-| base_ou       | yes      |         | Base OU to search for user and group entries               |
-| group_dns     | yes      |         | User must be member of this list of groups to get access   |
-| host          | yes      |         | Hostname of the LDAP server                                |
-| port          | yes      |         | Port of the LDAP server                                    |
-| use_ssl       | no       | false   | Use LDAPS to connect                                       |
-| use_tls       | no       | false   | Start TLS on LDAP to connect                               |
-| cacert        | no       | None    | Path to the CA cert used to validate certificate           |
-| id_attr       | no       | uid     | Field name of the user ID attribute                        |
-| scope         | no       | subtree | Search scope (base, onelevel, or subtree)                  |
+| option          | required | default | description                                                                                                                    |
+|-----------------|----------|---------|--------------------------------------------------------------------------------------------------------------------------------|
+| bind_dn         | yes      |         | DN of the service account to bind with the LDAP server                                                                         |
+| bind_password   | yes      |         | Password of the service account                                                                                                |
+| base_ou         | yes      |         | Base OU to search for user and group entries                                                                                   |
+| group_dns       | yes      |         | User must be member of this list of groups to get access                                                                       |
+| host            | yes      |         | Hostname of the LDAP server                                                                                                    |
+| port            | yes      |         | Port of the LDAP server                                                                                                        |
+| use_ssl         | no       | false   | Use LDAPS to connect                                                                                                           |
+| use_tls         | no       | false   | Start TLS on LDAP to connect                                                                                                   |
+| cacert          | no       | None    | Path to the CA cert used to validate certificate                                                                               |
+| id_attr         | no       | uid     | Field name of the user ID attribute                                                                                            |
+| scope           | no       | subtree | Search scope (base, onelevel, or subtree)                                                                                      |
+| network_timeout | no       | 10.0    | Timeout for network operations (in seconds)                                                                                    |
+| debug           | no       | false   | Enable debug mode. When debug mode is enabled all the calls (including the results) to LDAP server are logged.                 |
 
 ### Configuration Example
 
