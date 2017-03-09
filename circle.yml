@@ -47,7 +47,7 @@ checkout:
 
 test:
   pre:
-    - make play .lint .unit-tests
+    - cat virtualenv/bin/activate ; make play .lint .unit-tests
   override:
     # Build packages for supported distros on native OS inside stackstorm/buildpack container.
     - |
