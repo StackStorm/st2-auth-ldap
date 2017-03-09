@@ -334,5 +334,5 @@ class LDAPBackendTest(unittest2.TestCase):
             'cn=stormers,dc=stackstorm,dc=net'
         ]
 
-        groups = backend.get_groups(username=LDAP_USER_UID)
+        groups = backend.get_user_groups(username=LDAP_USER_UID)
         self.assertEqual(groups, expected)
