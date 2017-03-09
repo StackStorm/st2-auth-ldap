@@ -165,11 +165,14 @@ class LDAPAuthenticationBackend(object):
                                                    username=username)
 
                 # Assume group entries are not case sensitive.
-                groups = [entry.lower() for entry in groups]
+                user_groups = [entry.lower() for entry in groups]
                 required_groups = [entry.lower() for entry in self._group_dns]
 
-                if not list(set(required_groups) & set(groups)):
-                    LOG.exception('Unable to verify membership for user "%s".' % username)
+                if not list(set(required_groups) & set(user_groups)):
+                    msg = ('Unable to verify membership for user "%s (required_groups=%s,'
+                           'actual_groups=%s)".' % (username, str(required_groups),
+                                                    str(user_groups)))
+                    LOG.exception(msg)
                     return False
             except Exception:
                 LOG.exception('Unexpected error when querying membership for user "%s".' % username)
