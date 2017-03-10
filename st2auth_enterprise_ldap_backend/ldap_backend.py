@@ -166,10 +166,10 @@ class LDAPAuthenticationBackend(object):
                 query_str = '(|(&(objectClass=*)(|(member={0})(uniqueMember={0})(memberUid={1}))))'
                 query = query_str.format(user_dn, username)
                 result = connection.search_s(self._base_ou, self._scope, query, [])
-                groups = [entry[0] for entry in result if entry[0] is not None] if result else []
+                user_groups = [entry[0] for entry in result if entry[0] is not None] if result else []
 
                 # Assume group entries are not case sensitive.
-                user_groups = set([entry.lower() for entry in groups])
+                user_groups = set([entry.lower() for entry in user_groups])
                 required_groups = set([entry.lower() for entry in self._group_dns])
 
                 if not required_groups.issubset(user_groups):
