@@ -21,6 +21,7 @@ import os
 import logging
 
 import ldap
+import ldap.filter
 import ldapurl
 
 __all__ = [
@@ -141,6 +142,7 @@ class LDAPAuthenticationBackend(object):
 
             # Search for user and fetch the DN of the record.
             try:
+                username = ldap.filter.escape_filter_chars(username)
                 query = '%s=%s' % (self._id_attr, username)
                 result = connection.search_s(self._base_ou, self._scope, query, [])
                 entries = [entry for entry in result if entry[0] is not None] if result else []
