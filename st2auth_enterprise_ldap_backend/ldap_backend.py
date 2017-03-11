@@ -38,6 +38,15 @@ SEARCH_SCOPES = {
     'subtree': ldapurl.LDAP_SCOPE_SUBTREE
 }
 
+# The query on member is included for groupOfNames.
+# The query on uniqueMember is included for groupOfUniqueNames.
+# The query on memberUid is included for posixGroup.
+#
+# Note: To avoid injection attacks the final query needs to be assembled ldap.filter.filter_format
+# method and *NOT* by doing simple string formating / concatenation (method ensures filter values
+# are correctly escaped).
+USER_GROUP_MEMBERSHIP_QUERY = '(|(&(objectClass=*)(|(member=%s)(uniqueMember=%s)(memberUid=%s))))'
+
 
 class LDAPAuthenticationBackend(object):
     CAPABILITIES = (
@@ -161,9 +170,6 @@ class LDAPAuthenticationBackend(object):
                 return False
 
             # Search if user is member of pre-defined groups.
-            # The query on member is included for groupOfNames.
-            # The query on uniqueMember is included for groupOfUniqueNames.
-            # The query on memberUid is included for posixGroup.
             try:
                 user_groups = self._get_groups_for_user(connection=connection, user_dn=user_dn,
                                                         username=username)
@@ -284,9 +290,8 @@ class LDAPAuthenticationBackend(object):
 
         :rtype: ``list`` of ``str``
         """
-        query_str = '(|(&(objectClass=*)(|(member=%s)(uniqueMember=%s)(memberUid=%s))))'
         filter_values = [user_dn, user_dn, username]
-        query = ldap.filter.filter_format(query_str, filter_values)
+        query = ldap.filter.filter_format(USER_GROUP_MEMBERSHIP_QUERY, filter_values)
         result = connection.search_s(self._base_ou, self._scope, query, [])
 
         if result:
