@@ -165,8 +165,9 @@ class LDAPAuthenticationBackend(object):
             # The query on uniqueMember is included for groupOfUniqueNames.
             # The query on memberUid is included for posixGroup.
             try:
-                query_str = '(|(&(objectClass=*)(|(member={0})(uniqueMember={0})(memberUid={1}))))'
-                query = query_str.format(user_dn, username)
+                query_str = '(|(&(objectClass=*)(|(member=%s)(uniqueMember=%s)(memberUid=%s))))'
+                filter_values = [user_dn, user_dn, username]
+                query = ldap.filter.filter_format(query_str, filter_values)
                 result = connection.search_s(self._base_ou, self._scope, query, [])
 
                 if result:
