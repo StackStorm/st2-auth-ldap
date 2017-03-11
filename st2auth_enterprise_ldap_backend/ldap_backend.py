@@ -21,6 +21,7 @@ import os
 import logging
 
 import ldap
+import ldap.filter
 import ldapurl
 
 __all__ = [
@@ -130,6 +131,9 @@ class LDAPAuthenticationBackend(object):
     def authenticate(self, username, password):
         connection = None
 
+        if not password:
+            raise ValueError('password cannot be empty')
+
         try:
             # Instantiate connection object and bind with service account.
             try:
@@ -141,6 +145,7 @@ class LDAPAuthenticationBackend(object):
 
             # Search for user and fetch the DN of the record.
             try:
+                username = ldap.filter.escape_filter_chars(username)
                 query = '%s=%s' % (self._id_attr, username)
                 result = connection.search_s(self._base_ou, self._scope, query, [])
                 entries = [entry for entry in result if entry[0] is not None] if result else []
@@ -163,17 +168,25 @@ class LDAPAuthenticationBackend(object):
             # The query on uniqueMember is included for groupOfUniqueNames.
             # The query on memberUid is included for posixGroup.
             try:
-                query_str = '(|(&(objectClass=*)(|(member={0})(uniqueMember={0})(memberUid={1}))))'
-                query = query_str.format(user_dn, username)
+                query_str = '(|(&(objectClass=*)(|(member=%s)(uniqueMember=%s)(memberUid=%s))))'
+                filter_values = [user_dn, user_dn, username]
+                query = ldap.filter.filter_format(query_str, filter_values)
                 result = connection.search_s(self._base_ou, self._scope, query, [])
-                entries = [entry[0] for entry in result if entry[0] is not None] if result else []
 
-                # Assume group entrie are not case sensitive.
-                groups = [entry.lower() for entry in self._group_dns]
-                entries = [entry.lower() for entry in entries]
+                if result:
+                    user_groups = [entry[0] for entry in result if entry[0] is not None]
+                else:
+                    user_groups = []
 
-                if not list(set(groups) & set(entries)):
-                    LOG.exception('Unable to verify membership for user "%s".' % username)
+                # Assume group entries are not case sensitive.
+                user_groups = set([entry.lower() for entry in user_groups])
+                required_groups = set([entry.lower() for entry in self._group_dns])
+
+                if not required_groups.issubset(user_groups):
+                    msg = ('Unable to verify membership for user "%s (required_groups=%s,'
+                           'actual_groups=%s)".' % (username, str(required_groups),
+                                                    str(user_groups)))
+                    LOG.exception(msg)
                     return False
             except Exception:
                 LOG.exception('Unexpected error when querying membership for user "%s".' % username)
