@@ -23,8 +23,9 @@ dependencies:
     - ~/.cache/pip
   pre:
     - sudo apt-get install jq
-    - pip install tox
     - gem install package_cloud
+    - make .clone_st2_repo
+    - make requirements
   override:
     - |
         # Don't do heavy operation on all test nodes, only on 0 (step invocation)
@@ -48,8 +49,8 @@ checkout:
 test:
   pre:
     - ? |
-        step tox -e lint; next
-        step tox -e py27
+        step make .lint; next
+        step make .unit-tests
       : parallel: true
   override:
     # Build packages for supported distros on native OS inside stackstorm/buildpack container.

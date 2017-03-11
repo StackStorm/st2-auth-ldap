@@ -6,6 +6,101 @@ WHEELSDIR ?= opt/stackstorm/share/wheels
 CHANGELOG_COMMENT ?= "automated build, version: $(PKG_VERSION)"
 #DEB_EPOCH := $(shell echo $(PKG_VERSION) | grep -q dev || echo '1')
 DEB_DISTRO := $(shell [ -z $(DEB_EPOCH) ] && echo unstable || echo stable)
+VIRTUALENV_DIR ?= virtualenv
+
+ST2_REPO_PATH ?= /tmp/st2
+ST2_REPO_BRANCH ?= master
+
+REQUIREMENTS := test-requirements.txt requirements.txt
+PIP_OPTIONS := $(ST2_PIP_OPTIONS)
+
+# nasty hack to get a space into a variable
+space_char :=
+space_char +=
+comma := ,
+COMPONENTS = $(wildcard $(ST2_REPO_PATH)/st2*)
+COMPONENT_PYTHONPATH = $(subst $(space_char),:,$(realpath $(COMPONENTS)))
+
+.PHONY: play
+play:
+	@echo COMPONENT_PYTHONPATH=$(COMPONENT_PYTHONPATH)
+
+.PHONY: requirements
+requirements: virtualenv
+	@echo
+	@echo "==================== requirements ===================="
+	@echo
+
+	# Make sure we use latest version of pip
+	$(VIRTUALENV_DIR)/bin/pip install --upgrade "pip"
+
+	# Install requirements
+	for req in $(REQUIREMENTS); do \
+			echo "Installing $$req..." ; \
+			$(VIRTUALENV_DIR)/bin/pip install $(PIP_OPTIONS) -r $$req; \
+	done
+
+	# Install st2 requirements
+	$(VIRTUALENV_DIR)/bin/pip install -r $(ST2_REPO_PATH)/requirements.txt; \
+
+.PHONY: virtualenv
+virtualenv: $(VIRTUALENV_DIR)/bin/activate .clone_st2_repo
+$(VIRTUALENV_DIR)/bin/activate:
+	@echo
+	@echo "==================== virtualenv ===================="
+	@echo
+	test -d $(VIRTUALENV_DIR) || virtualenv --no-site-packages $(VIRTUALENV_DIR)
+
+	# Setup PYTHONPATH in bash activate script...
+	echo '' >> $(VIRTUALENV_DIR)/bin/activate
+	echo '_OLD_PYTHONPATH=$$PYTHONPATH' >> $(VIRTUALENV_DIR)/bin/activate
+	echo 'PYTHONPATH=$$_OLD_PYTHONPATH:$(COMPONENT_PYTHONPATH)' >> $(VIRTUALENV_DIR)/bin/activate
+	echo 'export PYTHONPATH' >> $(VIRTUALENV_DIR)/bin/activate
+	touch $(VIRTUALENV_DIR)/bin/activate
+
+	# Setup PYTHONPATH in fish activate script...
+	echo '' >> $(VIRTUALENV_DIR)/bin/activate.fish
+	echo 'set -gx _OLD_PYTHONPATH $$PYTHONPATH' >> $(VIRTUALENV_DIR)/bin/activate.fish
+	echo 'set -gx PYTHONPATH $$_OLD_PYTHONPATH $(COMPONENT_PYTHONPATH)' >> $(VIRTUALENV_DIR)/bin/activate.fish
+	echo 'functions -c deactivate old_deactivate' >> $(VIRTUALENV_DIR)/bin/activate.fish
+	echo 'function deactivate' >> $(VIRTUALENV_DIR)/bin/activate.fish
+	echo '  if test -n $$_OLD_PYTHONPATH' >> $(VIRTUALENV_DIR)/bin/activate.fish
+	echo '    set -gx PYTHONPATH $$_OLD_PYTHONPATH' >> $(VIRTUALENV_DIR)/bin/activate.fish
+	echo '    set -e _OLD_PYTHONPATH' >> $(VIRTUALENV_DIR)/bin/activate.fish
+	echo '  end' >> $(VIRTUALENV_DIR)/bin/activate.fish
+	echo '  old_deactivate' >> $(VIRTUALENV_DIR)/bin/activate.fish
+	echo '  functions -e old_deactivate' >> $(VIRTUALENV_DIR)/bin/activate.fish
+	echo 'end' >> $(VIRTUALENV_DIR)/bin/activate.fish
+	touch $(VIRTUALENV_DIR)/bin/activate.fish
+
+.PHONY: lint
+lint: requirements .clone_st2_repo .lint
+
+.PHONY: .lint
+.lint:
+	. $(VIRTUALENV_DIR)/bin/activate; flake8 --config ./lint-configs/python/.flake8 st2auth_enterprise_ldap_backend/
+	. $(VIRTUALENV_DIR)/bin/activate; pylint -E --rcfile=./lint-configs/python/.pylintrc st2auth_enterprise_ldap_backend/
+
+.PHONY: unit-tests
+unit-tests: requirements .clone_st2_repo .unit-tests
+
+.PHONY: .unit-tests
+.unit-tests:
+	@echo
+	@echo "==================== tests ===================="
+	@echo
+	echo "==========================================================="; \
+	echo "Running unit tests"; \
+	echo "==========================================================="; \
+	. $(VIRTUALENV_DIR)/bin/activate; nosetests $(NOSE_OPTS) -s -v tests/unit || exit 1; \
+
+.PHONY: .clone_st2_repo
+.clone_st2_repo:
+	@echo
+	@echo "==================== cloning st2 repo ===================="
+	@echo
+	@rm -rf /tmp/st2
+	@git clone https://github.com/StackStorm/st2.git --depth 1 --single-branch --branch $(ST2_REPO_BRANCH) /tmp/st2
 
 .PHONY: all install install_wheel install_deps deb rpm
 all:
@@ -26,7 +121,6 @@ install_deps:
 		ls -1 *-cp27mu-*.whl | while read f; do \
 			mv $$f $$(echo $$f | sed "s/cp27mu/none/"); \
 		done
-
 
 deb:
 	[ -z "$(DEB_EPOCH)" ] && _epoch="" || _epoch="$(DEB_EPOCH):"; \

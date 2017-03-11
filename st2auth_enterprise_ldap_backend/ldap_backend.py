@@ -24,6 +24,8 @@ import ldap
 import ldap.filter
 import ldapurl
 
+from st2auth.backends.constants import AuthBackendCapability
+
 __all__ = [
     'LDAPAuthenticationBackend'
 ]
@@ -36,8 +38,22 @@ SEARCH_SCOPES = {
     'subtree': ldapurl.LDAP_SCOPE_SUBTREE
 }
 
+# The query on member is included for groupOfNames.
+# The query on uniqueMember is included for groupOfUniqueNames.
+# The query on memberUid is included for posixGroup.
+#
+# Note: To avoid injection attacks the final query needs to be assembled ldap.filter.filter_format
+# method and *NOT* by doing simple string formating / concatenation (method ensures filter values
+# are correctly escaped).
+USER_GROUP_MEMBERSHIP_QUERY = '(|(&(objectClass=*)(|(member=%s)(uniqueMember=%s)(memberUid=%s))))'
+
 
 class LDAPAuthenticationBackend(object):
+    CAPABILITIES = (
+        AuthBackendCapability.CAN_AUTHENTICATE_USER,
+        AuthBackendCapability.HAS_USER_INFORMATION,
+        AuthBackendCapability.HAS_GROUP_INFORMATION
+    )
 
     def __init__(self, bind_dn, bind_password, base_ou, group_dns, host, port=389,
                  scope='subtree', id_attr='uid', use_ssl=False, use_tls=False,
@@ -145,38 +161,18 @@ class LDAPAuthenticationBackend(object):
 
             # Search for user and fetch the DN of the record.
             try:
-                username = ldap.filter.escape_filter_chars(username)
-                query = '%s=%s' % (self._id_attr, username)
-                result = connection.search_s(self._base_ou, self._scope, query, [])
-                entries = [entry for entry in result if entry[0] is not None] if result else []
-
-                if len(entries) <= 0:
-                    LOG.exception('Unable to identify user for "%s".' % query)
-                    return False
-
-                if len(entries) > 1:
-                    LOG.exception('More than one users identified for "%s".' % query)
-                    return False
-
-                user_dn = entries[0][0]
+                user_dn = self._get_user_dn(connection=connection, username=username)
+            except ValueError as e:
+                LOG.exception(str(e))
+                return False
             except Exception:
                 LOG.exception('Unexpected error when querying for user "%s".' % username)
                 return False
 
             # Search if user is member of pre-defined groups.
-            # The query on member is included for groupOfNames.
-            # The query on uniqueMember is included for groupOfUniqueNames.
-            # The query on memberUid is included for posixGroup.
             try:
-                query_str = '(|(&(objectClass=*)(|(member=%s)(uniqueMember=%s)(memberUid=%s))))'
-                filter_values = [user_dn, user_dn, username]
-                query = ldap.filter.filter_format(query_str, filter_values)
-                result = connection.search_s(self._base_ou, self._scope, query, [])
-
-                if result:
-                    user_groups = [entry[0] for entry in result if entry[0] is not None]
-                else:
-                    user_groups = []
+                user_groups = self._get_groups_for_user(connection=connection, user_dn=user_dn,
+                                                        username=username)
 
                 # Assume group entries are not case sensitive.
                 user_groups = set([entry.lower() for entry in user_groups])
@@ -212,4 +208,95 @@ class LDAPAuthenticationBackend(object):
         return False
 
     def get_user(self, username):
-        pass
+        """
+        Retrieve user information.
+
+        :rtype: ``dict``
+        """
+        connection = None
+
+        try:
+            connection = self._init_connection()
+            connection.simple_bind_s(self._bind_dn, self._bind_password)
+
+            _, user_info = self._get_user(connection=connection, username=username)
+        except Exception:
+            LOG.exception('Failed to retrieve details for user "%s"' % (username))
+            return None
+        finally:
+            self._clear_connection(connection)
+
+        user_info = dict(user_info)
+        return user_info
+
+    def get_user_groups(self, username):
+        """
+        Return a list of all the groups user is a member of.
+
+        :rtype: ``list`` of ``str``
+        """
+        connection = None
+
+        try:
+            connection = self._init_connection()
+            connection.simple_bind_s(self._bind_dn, self._bind_password)
+
+            user_dn = self._get_user_dn(connection=connection, username=username)
+            groups = self._get_groups_for_user(connection=connection, user_dn=user_dn,
+                                               username=username)
+        except Exception:
+            LOG.exception('Failed to retrieve groups for user "%s"' % (username))
+            return None
+        finally:
+            self._clear_connection(connection)
+
+        return groups
+
+    def _get_user_dn(self, connection, username):
+        user_dn, _ = self._get_user(connection=connection, username=username)
+        return user_dn
+
+    def _get_user(self, connection, username):
+        """
+        Retrieve LDAP user record for the provided username.
+
+        Note: This method escapes ``username`` so it can safely be used as a filter in the query.
+
+        :rtype: ``tuple`` (``user_dn``, ``user_info_dict``)
+        """
+        username = ldap.filter.escape_filter_chars(username)
+        query = '%s=%s' % (self._id_attr, username)
+        result = connection.search_s(self._base_ou, self._scope, query, [])
+
+        if result:
+            entries = [entry for entry in result if entry[0] is not None]
+        else:
+            entries = []
+
+        if len(entries) <= 0:
+            msg = ('Unable to identify user for "%s".' % (query))
+            raise ValueError(msg)
+
+        if len(entries) > 1:
+            msg = ('More than one users identified for "%s".' % (query))
+            raise ValueError(msg)
+
+        user_tuple = entries[0]
+        return user_tuple
+
+    def _get_groups_for_user(self, connection, user_dn, username):
+        """
+        Return a list of all the groups user is a member of.
+
+        :rtype: ``list`` of ``str``
+        """
+        filter_values = [user_dn, user_dn, username]
+        query = ldap.filter.filter_format(USER_GROUP_MEMBERSHIP_QUERY, filter_values)
+        result = connection.search_s(self._base_ou, self._scope, query, [])
+
+        if result:
+            groups = [entry[0] for entry in result if entry[0] is not None]
+        else:
+            groups = []
+
+        return groups

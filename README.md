@@ -3,12 +3,13 @@
 [![Circle CI Build Status](https://circleci.com/gh/StackStorm/st2-enterprise-auth-backend-ldap.svg?style=shield&circle-token=c0124395bc8e6563655ed40dc2e72b0beb44fae3)](https://circleci.com/gh/StackStorm/st2-enterprise-auth-backend-ldap)
 [![IRC](https://img.shields.io/irc/%23stackstorm.png)](http://webchat.freenode.net/?channels=stackstorm)
 
-### Requirements
-```
+## Requirements
+
+```bash
 sudo apt-get install -y python-dev libldap2-dev libsasl2-dev libssl-dev ldap-utils
 ```
 
-### Configuration Options
+## Configuration Options
 
 | option          | required | default | description                                                                                                                    |
 |-----------------|----------|---------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -26,7 +27,7 @@ sudo apt-get install -y python-dev libldap2-dev libsasl2-dev libssl-dev ldap-uti
 | network_timeout | no       | 10.0    | Timeout for network operations (in seconds)                                                                                    |
 | debug           | no       | false   | Enable debug mode. When debug mode is enabled all the calls (including the results) to LDAP server are logged.                 |
 
-### Configuration Example
+## Configuration Example
 
 Please refer to the [standalone mode](http://docs.stackstorm.com/config/authentication.html#setup-standalone-mode) in the configuration section for authentication for basic setup concept. The following is an example of the auth section in the StackStorm configuration file for the LDAP backend.
 
@@ -42,4 +43,12 @@ cert = /path/to/mycert.crt
 key = /path/to/mycert.key
 logging = /path/to/st2auth.logging.conf
 api_url = http://myhost.example.com:9101/
+```
+
+## Running tests
+
+Unit tests:
+
+```bash
+make unit-tests
 ```
