@@ -131,6 +131,9 @@ class LDAPAuthenticationBackend(object):
     def authenticate(self, username, password):
         connection = None
 
+        if not password:
+            raise ValueError('password cannot be empty')
+
         try:
             # Instantiate connection object and bind with service account.
             try:
