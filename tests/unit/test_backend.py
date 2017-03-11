@@ -376,3 +376,44 @@ class LDAPBackendTest(unittest2.TestCase):
         authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_PASSWD)
 
         self.assertTrue(authenticated)
+
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'search_s',
+        mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, []]))
+    def test_special_characters_in_username_are_escaped(self):
+        # User is not member of any of the required group
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR
+        )
+
+        values = [
+            ('stanleyA', 'stanleyA', 'stanleyA'),
+            ('stanley!@?.,&', 'stanley!@?.,&', 'stanley!@?.,&'),
+            # Special characters () should be escaped
+            ('(stanley)', '\\28stanley\\29', '\\5c28stanley\\5c29'),
+            # Special characters () should be escaped
+            ('(stanley=)', '\\28stanley=\\29', '\\5c28stanley=\\5c29'),
+        ]
+
+        for actual_username, expected_username_1, expected_username_2 in values:
+            authenticated = backend.authenticate(actual_username, LDAP_USER_BAD_PASSWD)
+            call_args_1 = ldap.ldapobject.SimpleLDAPObject.search_s.call_args_list[0][0]
+            call_args_2 = ldap.ldapobject.SimpleLDAPObject.search_s.call_args_list[1][0]
+
+            # First search_s call (find user by uid)
+            filter_call_value = call_args_1[2]
+            self.assertEqual(filter_call_value, 'uid=%s' % (expected_username_1))
+
+            # Second search_s call (group membership test)
+            filter_call_value = call_args_2[2]
+            self.assertTrue('(memberUid=%s)' % (expected_username_2) in filter_call_value)
+
+            ldap.ldapobject.SimpleLDAPObject.search_s = mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, []])
