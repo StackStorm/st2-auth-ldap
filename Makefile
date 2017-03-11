@@ -9,7 +9,7 @@ DEB_DISTRO := $(shell [ -z $(DEB_EPOCH) ] && echo unstable || echo stable)
 VIRTUALENV_DIR ?= virtualenv
 
 ST2_REPO_PATH ?= /tmp/st2
-ST2_REPO_BRANCH ?= auth_backends_capabilities
+ST2_REPO_BRANCH ?= master
 
 REQUIREMENTS := test-requirements.txt requirements.txt
 PIP_OPTIONS := $(ST2_PIP_OPTIONS)
