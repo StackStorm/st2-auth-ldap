@@ -21,6 +21,7 @@ import os
 import logging
 
 import ldap
+import ldap.filter
 import ldapurl
 
 from st2auth.backends.constants import AuthBackendCapability
@@ -137,6 +138,9 @@ class LDAPAuthenticationBackend(object):
     def authenticate(self, username, password):
         connection = None
 
+        if not password:
+            raise ValueError('password cannot be empty')
+
         try:
             # Instantiate connection object and bind with service account.
             try:
@@ -161,14 +165,14 @@ class LDAPAuthenticationBackend(object):
             # The query on uniqueMember is included for groupOfUniqueNames.
             # The query on memberUid is included for posixGroup.
             try:
-                groups = self._get_groups_for_user(connection=connection, user_dn=user_dn,
-                                                   username=username)
+                user_groups = self._get_groups_for_user(connection=connection, user_dn=user_dn,
+                                                        username=username)
 
                 # Assume group entries are not case sensitive.
-                user_groups = set([entry.lower() for entry in groups])
+                user_groups = set([entry.lower() for entry in user_groups])
                 required_groups = set([entry.lower() for entry in self._group_dns])
 
-                if not set.issubset(required_groups, user_groups):
+                if not required_groups.issubset(user_groups):
                     msg = ('Unable to verify membership for user "%s (required_groups=%s,'
                            'actual_groups=%s)".' % (username, str(required_groups),
                                                     str(user_groups)))
@@ -250,11 +254,18 @@ class LDAPAuthenticationBackend(object):
         """
         Retrieve LDAP user record for the provided username.
 
+        Note: This method escapes ``username`` so it can safely be used as a filter in the query.
+
         :rtype: ``tuple`` (``user_dn``, ``user_info_dict``)
         """
+        username = ldap.filter.escape_filter_chars(username)
         query = '%s=%s' % (self._id_attr, username)
         result = connection.search_s(self._base_ou, self._scope, query, [])
-        entries = [entry for entry in result if entry[0] is not None] if result else []
+
+        if result:
+            entries = [entry for entry in result if entry[0] is not None]
+        else:
+            entries = []
 
         if len(entries) <= 0:
             msg = ('Unable to identify user for "%s".' % (query))
@@ -273,9 +284,14 @@ class LDAPAuthenticationBackend(object):
 
         :rtype: ``list`` of ``str``
         """
-        query_str = '(|(&(objectClass=*)(|(member={0})(uniqueMember={0})(memberUid={1}))))'
-        query = query_str.format(user_dn, username)
+        query_str = '(|(&(objectClass=*)(|(member=%s)(uniqueMember=%s)(memberUid=%s))))'
+        filter_values = [user_dn, user_dn, username]
+        query = ldap.filter.filter_format(query_str, filter_values)
         result = connection.search_s(self._base_ou, self._scope, query, [])
-        groups = [entry[0] for entry in result if entry[0] is not None] if result else []
+
+        if result:
+            groups = [entry[0] for entry in result if entry[0] is not None]
+        else:
+            groups = []
 
         return groups
