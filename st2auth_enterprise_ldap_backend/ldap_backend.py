@@ -21,6 +21,7 @@ import os
 import logging
 
 import ldap
+import ldap.filter
 import ldapurl
 
 __all__ = [
@@ -39,7 +40,8 @@ SEARCH_SCOPES = {
 class LDAPAuthenticationBackend(object):
 
     def __init__(self, bind_dn, bind_password, base_ou, group_dns, host, port=389,
-                 scope='subtree', id_attr='uid', use_ssl=False, use_tls=False, cacert=None):
+                 scope='subtree', id_attr='uid', use_ssl=False, use_tls=False,
+                 cacert=None, network_timeout=10.0, debug=False):
 
         if not bind_dn:
             raise ValueError('Bind DN to query the LDAP server is not provided.')
@@ -73,6 +75,8 @@ class LDAPAuthenticationBackend(object):
         self._use_ssl = use_ssl
         self._use_tls = use_tls
         self._cacert = cacert
+        self._network_timeout = network_timeout
+        self._debug = debug
 
         if not id_attr:
             LOG.warn('Default to "uid" for the user attribute in the LDAP query.')
@@ -101,13 +105,19 @@ class LDAPAuthenticationBackend(object):
             else:
                 ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
 
+        if self._debug:
+            trace_level = 2
+        else:
+            trace_level = 0
+
         # Setup connection and options.
         protocol = 'ldaps' if self._use_ssl else 'ldap'
         endpoint = '%s://%s:%d' % (protocol, self._host, int(self._port))
-        connection = ldap.initialize(endpoint)
+        connection = ldap.initialize(endpoint, trace_level=trace_level)
         connection.set_option(ldap.OPT_DEBUG_LEVEL, 255)
         connection.set_option(ldap.OPT_REFERRALS, 0)
         connection.set_option(ldap.OPT_PROTOCOL_VERSION, ldap.VERSION3)
+        connection.set_option(ldap.OPT_NETWORK_TIMEOUT, self._network_timeout)
 
         if self._use_tls:
             connection.start_tls_s()
@@ -121,6 +131,9 @@ class LDAPAuthenticationBackend(object):
     def authenticate(self, username, password):
         connection = None
 
+        if not password:
+            raise ValueError('password cannot be empty')
+
         try:
             # Instantiate connection object and bind with service account.
             try:
@@ -132,6 +145,7 @@ class LDAPAuthenticationBackend(object):
 
             # Search for user and fetch the DN of the record.
             try:
+                username = ldap.filter.escape_filter_chars(username)
                 query = '%s=%s' % (self._id_attr, username)
                 result = connection.search_s(self._base_ou, self._scope, query, [])
                 entries = [entry for entry in result if entry[0] is not None] if result else []
@@ -154,17 +168,25 @@ class LDAPAuthenticationBackend(object):
             # The query on uniqueMember is included for groupOfUniqueNames.
             # The query on memberUid is included for posixGroup.
             try:
-                query_str = '(|(&(objectClass=*)(|(member={0})(uniqueMember={0})(memberUid={1}))))'
-                query = query_str.format(user_dn, username)
+                query_str = '(|(&(objectClass=*)(|(member=%s)(uniqueMember=%s)(memberUid=%s))))'
+                filter_values = [user_dn, user_dn, username]
+                query = ldap.filter.filter_format(query_str, filter_values)
                 result = connection.search_s(self._base_ou, self._scope, query, [])
-                entries = [entry[0] for entry in result if entry[0] is not None] if result else []
 
-                # Assume group entrie are not case sensitive.
-                groups = [entry.lower() for entry in self._group_dns]
-                entries = [entry.lower() for entry in entries]
+                if result:
+                    user_groups = [entry[0] for entry in result if entry[0] is not None]
+                else:
+                    user_groups = []
 
-                if not list(set(groups) & set(entries)):
-                    LOG.exception('Unable to verify membership for user "%s".' % username)
+                # Assume group entries are not case sensitive.
+                user_groups = set([entry.lower() for entry in user_groups])
+                required_groups = set([entry.lower() for entry in self._group_dns])
+
+                if not required_groups.issubset(user_groups):
+                    msg = ('Unable to verify membership for user "%s (required_groups=%s,'
+                           'actual_groups=%s)".' % (username, str(required_groups),
+                                                    str(user_groups)))
+                    LOG.exception(msg)
                     return False
             except Exception:
                 LOG.exception('Unexpected error when querying membership for user "%s".' % username)
@@ -186,6 +208,8 @@ class LDAPAuthenticationBackend(object):
             return False
         finally:
             self._clear_connection(connection)
+
+        return False
 
     def get_user(self, username):
         pass
