@@ -239,7 +239,7 @@ class LDAPBackendConfigurationTest(unittest2.TestCase):
         client_options = {
             ldap.OPT_RESTART: 0,
             ldap.OPT_SIZELIMIT: 2014,
-            ldap.OPT_DIAGNOSTIC_MESSAGE: 'a'
+            ldap.OPT_DIAGNOSTIC_MESSAGE: 'test'
         }
 
         backend = ldap_backend.LDAPAuthenticationBackend(
