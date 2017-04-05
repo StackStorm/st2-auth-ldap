@@ -27,6 +27,7 @@ sudo apt-get install -y python-dev libldap2-dev libsasl2-dev libssl-dev ldap-uti
 | network_timeout | no       | 10.0    | Timeout for network operations (in seconds)                                                                                    |
 | chase_referrals | no       | false   | True if the referrals should be automatically chased within the underlying LDAP C lib                                          |
 | debug           | no       | false   | Enable debug mode. When debug mode is enabled all the calls (including the results) to LDAP server are logged                  |
+| client_options  | no       |         | A dictionary with additional LDAP client options which can be passed to set_connection() method                                |
 
 ## Configuration Example
 
