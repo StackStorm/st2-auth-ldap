@@ -144,7 +144,7 @@ class LDAPAuthenticationBackend(object):
 
         client_options = self._client_options or {}
         for option_name, option_value in client_options.items():
-            connection.set_option(option_name, option_value)
+            connection.set_option(int(option_name), option_value)
 
         if self._use_tls:
             connection.start_tls_s()

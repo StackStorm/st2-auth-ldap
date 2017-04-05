@@ -239,7 +239,9 @@ class LDAPBackendConfigurationTest(unittest2.TestCase):
         client_options = {
             ldap.OPT_RESTART: 0,
             ldap.OPT_SIZELIMIT: 2014,
-            ldap.OPT_DIAGNOSTIC_MESSAGE: 'test'
+            ldap.OPT_DIAGNOSTIC_MESSAGE: 'test',
+            # Not using a constant, 20482 is OPT_TIMEOUT
+            '20482': 9
         }
 
         backend = ldap_backend.LDAPAuthenticationBackend(
@@ -254,4 +256,4 @@ class LDAPBackendConfigurationTest(unittest2.TestCase):
 
         conn = backend._init_connection()
         for option_name, option_value in client_options.items():
-            self.assertEqual(conn.get_option(option_name), option_value)
+            self.assertEqual(conn.get_option(int(option_name)), option_value)
