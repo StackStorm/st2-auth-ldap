@@ -25,7 +25,8 @@ sudo apt-get install -y python-dev libldap2-dev libsasl2-dev libssl-dev ldap-uti
 | id_attr         | no       | uid     | Field name of the user ID attribute                                                                                            |
 | scope           | no       | subtree | Search scope (base, onelevel, or subtree)                                                                                      |
 | network_timeout | no       | 10.0    | Timeout for network operations (in seconds)                                                                                    |
-| debug           | no       | false   | Enable debug mode. When debug mode is enabled all the calls (including the results) to LDAP server are logged.                 |
+| chase_referrals | no       | false   | True if the referrals should be automatically chased within the underlying LDAP C lib                                          |
+| debug           | no       | false   | Enable debug mode. When debug mode is enabled all the calls (including the results) to LDAP server are logged                  |
 
 ## Configuration Example
 
