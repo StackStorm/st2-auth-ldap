@@ -207,3 +207,29 @@ class LDAPBackendConfigurationTest(unittest2.TestCase):
         authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_PASSWD)
 
         self.assertFalse(authenticated)
+
+    def test_chase_referrals(self):
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR,
+            chase_referrals=False
+        )
+
+        conn = backend._init_connection()
+        self.assertFalse(conn.get_option(ldap.OPT_REFERRALS))
+
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR,
+            chase_referrals=True
+        )
+        conn = backend._init_connection()
+        self.assertTrue(conn.get_option(ldap.OPT_REFERRALS))
