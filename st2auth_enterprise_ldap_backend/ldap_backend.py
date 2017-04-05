@@ -57,7 +57,8 @@ class LDAPAuthenticationBackend(object):
 
     def __init__(self, bind_dn, bind_password, base_ou, group_dns, host, port=389,
                  scope='subtree', id_attr='uid', use_ssl=False, use_tls=False,
-                 cacert=None, network_timeout=10.0, chase_referrals=False, debug=False):
+                 cacert=None, network_timeout=10.0, chase_referrals=False, debug=False,
+                 client_options=None):
 
         if not bind_dn:
             raise ValueError('Bind DN to query the LDAP server is not provided.')
@@ -94,6 +95,7 @@ class LDAPAuthenticationBackend(object):
         self._network_timeout = network_timeout
         self._chase_referrals = chase_referrals
         self._debug = debug
+        self._client_options = client_options
 
         if not id_attr:
             LOG.warn('Default to "uid" for the user attribute in the LDAP query.')
@@ -139,6 +141,10 @@ class LDAPAuthenticationBackend(object):
             connection.set_option(ldap.OPT_REFERRALS, 1)
         else:
             connection.set_option(ldap.OPT_REFERRALS, 0)
+
+        client_options = self._client_options or {}
+        for option_name, option_value in client_options.items():
+            connection.set_option(option_name, option_value)
 
         if self._use_tls:
             connection.start_tls_s()

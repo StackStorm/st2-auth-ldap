@@ -231,5 +231,27 @@ class LDAPBackendConfigurationTest(unittest2.TestCase):
             id_attr=LDAP_ID_ATTR,
             chase_referrals=True
         )
+
         conn = backend._init_connection()
         self.assertTrue(conn.get_option(ldap.OPT_REFERRALS))
+
+    def test_client_options(self):
+        client_options = {
+            ldap.OPT_RESTART: 0,
+            ldap.OPT_SIZELIMIT: 2014,
+            ldap.OPT_DIAGNOSTIC_MESSAGE: 'a'
+        }
+
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR,
+            client_options=client_options
+        )
+
+        conn = backend._init_connection()
+        for option_name, option_value in client_options.items():
+            self.assertEqual(conn.get_option(option_name), option_value)
