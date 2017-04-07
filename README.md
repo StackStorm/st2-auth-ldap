@@ -25,13 +25,15 @@ sudo apt-get install -y python-dev libldap2-dev libsasl2-dev libssl-dev ldap-uti
 | id_attr         | no       | uid     | Field name of the user ID attribute                                                                                            |
 | scope           | no       | subtree | Search scope (base, onelevel, or subtree)                                                                                      |
 | network_timeout | no       | 10.0    | Timeout for network operations (in seconds)                                                                                    |
-| debug           | no       | false   | Enable debug mode. When debug mode is enabled all the calls (including the results) to LDAP server are logged.                 |
+| chase_referrals | no       | false   | True if the referrals should be automatically chased within the underlying LDAP C lib                                          |
+| debug           | no       | false   | Enable debug mode. When debug mode is enabled all the calls (including the results) to LDAP server are logged                  |
+| client_options  | no       |         | A dictionary with additional Python LDAP client options which can be passed to ``set_connection()`` method                     |
 
 ## Configuration Example
 
 Please refer to the [standalone mode](http://docs.stackstorm.com/config/authentication.html#setup-standalone-mode) in the configuration section for authentication for basic setup concept. The following is an example of the auth section in the StackStorm configuration file for the LDAP backend.
 
-```
+```ini
 [auth]
 mode = standalone
 backend = ldap
@@ -43,6 +45,23 @@ cert = /path/to/mycert.crt
 key = /path/to/mycert.key
 logging = /path/to/st2auth.logging.conf
 api_url = http://myhost.example.com:9101/
+```
+
+Note: Key in the ``client_options`` dictionary must be an integer representing a LDAP constant option value.
+
+For example:
+
+```ini
+backend_kwargs = {..., "client_options": {"20482": 9}}
+```
+
+In this case, "20482" represents ``ldap.OPT_TIMEOUT`` option.
+
+To retrieve a integer value of a particular client option constant, you can run the following code:
+
+```python
+import ldap
+print(ldap.OPT_TIMEOUT)
 ```
 
 ## Running tests

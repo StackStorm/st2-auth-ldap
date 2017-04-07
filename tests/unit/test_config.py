@@ -207,3 +207,53 @@ class LDAPBackendConfigurationTest(unittest2.TestCase):
         authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_PASSWD)
 
         self.assertFalse(authenticated)
+
+    def test_chase_referrals(self):
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR,
+            chase_referrals=False
+        )
+
+        conn = backend._init_connection()
+        self.assertFalse(conn.get_option(ldap.OPT_REFERRALS))
+
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR,
+            chase_referrals=True
+        )
+
+        conn = backend._init_connection()
+        self.assertTrue(conn.get_option(ldap.OPT_REFERRALS))
+
+    def test_client_options(self):
+        client_options = {
+            ldap.OPT_RESTART: 0,
+            ldap.OPT_SIZELIMIT: 2014,
+            ldap.OPT_DIAGNOSTIC_MESSAGE: 'test',
+            # Not using a constant, 20482 is OPT_TIMEOUT
+            '20482': 9
+        }
+
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR,
+            client_options=client_options
+        )
+
+        conn = backend._init_connection()
+        for option_name, option_value in client_options.items():
+            self.assertEqual(conn.get_option(int(option_name)), option_value)
