@@ -16,7 +16,7 @@ sudo apt-get install -y python-dev libldap2-dev libsasl2-dev libssl-dev ldap-uti
 | bind_dn         | yes      |         | DN of the service account to bind with the LDAP server                                                                         |
 | bind_password   | yes      |         | Password of the service account                                                                                                |
 | base_ou         | yes      |         | Base OU to search for user and group entries                                                                                   |
-| group_dns       | yes      |         | User must be member of this list of groups to get access                                                                       |
+| group_dns       | yes      |         | User must be member of all groups in this list of groups to get access                                                         |
 | host            | yes      |         | Hostname of the LDAP server                                                                                                    |
 | port            | yes      |         | Port of the LDAP server                                                                                                        |
 | use_ssl         | no       | false   | Use LDAPS to connect                                                                                                           |
