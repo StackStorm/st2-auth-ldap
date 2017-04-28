@@ -38,6 +38,11 @@ SEARCH_SCOPES = {
     'subtree': ldapurl.LDAP_SCOPE_SUBTREE
 }
 
+VALID_GROUP_DNS_CHECK_VALUES = [
+    'and',
+    'or'
+]
+
 # The query on member is included for groupOfNames.
 # The query on uniqueMember is included for groupOfUniqueNames.
 # The query on memberUid is included for posixGroup.
@@ -58,7 +63,7 @@ class LDAPAuthenticationBackend(object):
     def __init__(self, bind_dn, bind_password, base_ou, group_dns, host, port=389,
                  scope='subtree', id_attr='uid', use_ssl=False, use_tls=False,
                  cacert=None, network_timeout=10.0, chase_referrals=False, debug=False,
-                 client_options=None):
+                 client_options=None, group_dns_check='and'):
 
         if not bind_dn:
             raise ValueError('Bind DN to query the LDAP server is not provided.')
@@ -114,6 +119,11 @@ class LDAPAuthenticationBackend(object):
         if not group_dns:
             raise ValueError('One or more user groups must be specified.')
 
+        if group_dns_check not in VALID_GROUP_DNS_CHECK_VALUES:
+            valid_values = ', '.join(VALID_GROUP_DNS_CHECK_VALUES)
+            raise ValueError('Valid values for group_dns_check are: %s' % (valid_values))
+
+        self._group_dns_check = group_dns_check
         self._group_dns = group_dns
 
     def _init_connection(self):
@@ -189,12 +199,10 @@ class LDAPAuthenticationBackend(object):
                 user_groups = set([entry.lower() for entry in user_groups])
                 required_groups = set([entry.lower() for entry in self._group_dns])
 
-                if not required_groups.issubset(user_groups):
-                    msg = ('Unable to verify membership for user "%s (required_groups=%s,'
-                           'actual_groups=%s)".' % (username, str(required_groups),
-                                                    str(user_groups)))
-                    LOG.exception(msg)
-                    return False
+                result = self._verify_user_group_membership(required_groups=required_groups,
+                                                            user_groups=user_groups,
+                                                            check_behavior=self._group_dns_check)
+                return False
             except Exception:
                 LOG.exception('Unexpected error when querying membership for user "%s".' % username)
                 return False
@@ -311,3 +319,35 @@ class LDAPAuthenticationBackend(object):
             groups = []
 
         return groups
+
+    def _verify_user_group_membership(self, required_groups, actual_groups,
+                                      check_behavior='and'):
+        """
+        Validate that the user is a member of required groups based on the check behavior defined
+        in the config (and / or).
+        """
+
+        if check_behavior == 'and':
+            additional_msg = ('user needs to be member of all the following groups "%s" for '
+                              'authentication to succeeed'))
+        elif check_behavior == 'or':
+            additional_msg = ('user needs to be member of one or more of the following groups "%s" '
+                              'for authentication to succeeed'))
+
+        LOG.debug('Verifying user group membership using "%s" behavior (%s)' %
+                  (check_behavior, additional_msg))
+
+        msg = ('Unable to verify membership for user "%s (required_groups=%s,'
+               'actual_groups=%s,check_behavior=%s)".' % (username, str(required_groups),
+                                                         str(user_groups), check_behavior))
+        if check_behavior == 'and':
+            if not required_groups.issubset(user_groups):
+                LOG.exception(msg)
+                return False
+        elif check_behavior == 'or':
+            if not required_groups.intersection(user_groups):
+                LOG.exception(msg)
+                return False
+
+        # Final safe guard
+        return False
