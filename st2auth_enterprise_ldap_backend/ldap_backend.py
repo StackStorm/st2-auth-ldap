@@ -121,7 +121,8 @@ class LDAPAuthenticationBackend(object):
 
         if group_dns_check not in VALID_GROUP_DNS_CHECK_VALUES:
             valid_values = ', '.join(VALID_GROUP_DNS_CHECK_VALUES)
-            raise ValueError('Valid values for group_dns_check are: %s' % (valid_values))
+            raise ValueError('Invalid value "%s" for group_dns_check option. Valid values are: '
+                             '%s.' % (group_dns_check, valid_values))
 
         self._group_dns_check = group_dns_check
         self._group_dns = group_dns
