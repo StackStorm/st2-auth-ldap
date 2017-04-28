@@ -203,7 +203,8 @@ class LDAPAuthenticationBackend(object):
                                                             required_groups=required_groups,
                                                             user_groups=user_groups,
                                                             check_behavior=self._group_dns_check)
-                return result
+                if not result:
+                    return False
             except Exception:
                 LOG.exception('Unexpected error when querying membership for user "%s".' % username)
                 return False
@@ -338,17 +339,17 @@ class LDAPAuthenticationBackend(object):
         LOG.debug('Verifying user group membership using "%s" behavior (%s)' %
                   (check_behavior, additional_msg))
 
+        if check_behavior == 'and':
+            if required_groups.issubset(user_groups):
+                return True
+        elif check_behavior == 'or':
+            if required_groups.intersection(user_groups):
+                return True
+
         msg = ('Unable to verify membership for user "%s (required_groups=%s,'
                'actual_groups=%s,check_behavior=%s)".' % (username, str(required_groups),
                                                           str(user_groups), check_behavior))
-        if check_behavior == 'and':
-            if not required_groups.issubset(user_groups):
-                LOG.exception(msg)
-                return False
-        elif check_behavior == 'or':
-            if not required_groups.intersection(user_groups):
-                LOG.exception(msg)
-                return False
+        LOG.exception(msg)
 
         # Final safe guard
         return False
