@@ -235,7 +235,8 @@ class LDAPBackendTest(unittest2.TestCase):
             LDAP_BASE_OU,
             required_group_dns,
             LDAP_HOST,
-            id_attr=LDAP_ID_ATTR
+            id_attr=LDAP_ID_ATTR,
+            group_dns_check='and'
         )
 
         authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
@@ -261,7 +262,8 @@ class LDAPBackendTest(unittest2.TestCase):
             LDAP_BASE_OU,
             required_group_dns,
             LDAP_HOST,
-            id_attr=LDAP_ID_ATTR
+            id_attr=LDAP_ID_ATTR,
+            group_dns_check='and'
         )
 
         authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
@@ -280,6 +282,39 @@ class LDAPBackendTest(unittest2.TestCase):
     def test_authenticate_and_behavior_failure_non_group_member_of_all_required_groups_3(self):
         # User is member of two of the required groups and two non-required, but not
         # all of the required groups
+        required_group_dns = [
+            'cn=group1,dc=stackstorm,dc=net',
+            'cn=group2,dc=stackstorm,dc=net',
+            'cn=group5,dc=stackstorm,dc=net',
+            'cn=group6,dc=stackstorm,dc=net',
+        ]
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            required_group_dns,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR,
+            group_dns_check='and'
+        )
+
+        authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
+        self.assertFalse(authenticated)
+
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'search_s',
+        mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
+                                    [('cn=group1,dc=stackstorm,dc=net', ()),
+                                     ('cn=group2,dc=stackstorm,dc=net', ()),
+                                     ('cn=group3,dc=stackstorm,dc=net', ()),
+                                     ('cn=group4,dc=stackstorm,dc=net', ())]]))
+    def test_authenticate_and_is_default_behavior_non_group_member_of_all_required_groups(self):
+        # User is member of two of the required groups and two non-required, but not
+        # all of the required groups
+        # Verify "and" is a default group_dns_check_behavior
         required_group_dns = [
             'cn=group1,dc=stackstorm,dc=net',
             'cn=group2,dc=stackstorm,dc=net',
