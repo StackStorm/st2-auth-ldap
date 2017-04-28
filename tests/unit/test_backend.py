@@ -151,7 +151,7 @@ class LDAPBackendTest(unittest2.TestCase):
     @mock.patch.object(
         ldap.ldapobject.SimpleLDAPObject, 'search_s',
         mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, []]))
-    def test_authenticate_failure_non_group_member_no_groups(self):
+    def test_authenticate_and_behavior_failure_non_group_member_no_groups(self):
         # User is not member of any of the required group
         backend = ldap_backend.LDAPAuthenticationBackend(
             LDAP_BIND_DN,
@@ -171,7 +171,7 @@ class LDAPBackendTest(unittest2.TestCase):
     @mock.patch.object(
         ldap.ldapobject.SimpleLDAPObject, 'search_s',
         mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, [('cn=group1,dc=stackstorm,dc=net', ())]]))
-    def test_authenticate_failure_non_group_member_non_required_group(self):
+    def test_authenticate_and_behavior_failure_non_group_member_non_required_group(self):
         # User is member of a group which is not required
         backend = ldap_backend.LDAPAuthenticationBackend(
             LDAP_BIND_DN,
@@ -193,7 +193,7 @@ class LDAPBackendTest(unittest2.TestCase):
         mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
                                     [('cn=group1,dc=stackstorm,dc=net', ()),
                                      ('cn=group3,dc=stackstorm,dc=net', ())]]))
-    def test_authenticate_failure_non_group_member_of_all_required_groups_1(self):
+    def test_authenticate_and_behavior_failure_non_group_member_of_all_required_groups_1(self):
         # User is member of two of the required groups (1 and 3) but not all three of them
         # (1, 2, 3)
         required_group_dns = [
@@ -221,7 +221,7 @@ class LDAPBackendTest(unittest2.TestCase):
         mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
                                     [('cn=group1,dc=stackstorm,dc=net', ()),
                                      ('cn=group3,dc=stackstorm,dc=net', ())]]))
-    def test_authenticate_failure_non_group_member_of_all_required_groups_2(self):
+    def test_authenticate_and_behavior_failure_non_group_member_of_all_required_groups_2(self):
         # User is member of two of the groups, but none of them are required
         required_group_dns = [
             'cn=group7,dc=stackstorm,dc=net',
@@ -249,7 +249,7 @@ class LDAPBackendTest(unittest2.TestCase):
                                      ('cn=group2,dc=stackstorm,dc=net', ()),
                                      ('cn=group3,dc=stackstorm,dc=net', ()),
                                      ('cn=group4,dc=stackstorm,dc=net', ())]]))
-    def test_authenticate_failure_non_group_member_of_all_required_groups_3(self):
+    def test_authenticate_and_behavior_failure_non_group_member_of_all_required_groups_3(self):
         # User is member of two of the required groups and two non-required, but not
         # all of the required groups
         required_group_dns = [
