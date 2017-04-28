@@ -257,3 +257,18 @@ class LDAPBackendConfigurationTest(unittest2.TestCase):
         conn = backend._init_connection()
         for option_name, option_value in client_options.items():
             self.assertEqual(conn.get_option(int(option_name)), option_value)
+
+    def test_invalid_group_dns_check_option(self):
+        expected_msg = ('Invalid value "invalid" for group_dns_check option. Valid '
+                        'values are: and, or.')
+        self.assertRaisesRegexp(
+            ValueError,
+            expected_msg,
+            ldap_backend.LDAPAuthenticationBackend,
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_HOST,
+            group_dns_check='invalid'
+        )

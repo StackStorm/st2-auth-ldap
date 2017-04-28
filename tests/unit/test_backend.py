@@ -151,7 +151,7 @@ class LDAPBackendTest(unittest2.TestCase):
     @mock.patch.object(
         ldap.ldapobject.SimpleLDAPObject, 'search_s',
         mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, []]))
-    def test_authenticate_and_behavior_failure_non_group_member_no_groups(self):
+    def test_authenticate_failure_non_group_member_no_groups(self):
         # User is not member of any of the required group
         backend = ldap_backend.LDAPAuthenticationBackend(
             LDAP_BIND_DN,
@@ -159,7 +159,21 @@ class LDAPBackendTest(unittest2.TestCase):
             LDAP_BASE_OU,
             LDAP_GROUP_DNS,
             LDAP_HOST,
-            id_attr=LDAP_ID_ATTR
+            id_attr=LDAP_ID_ATTR,
+            group_dns_check='and'
+        )
+
+        authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
+        self.assertFalse(authenticated)
+
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR,
+            group_dns_check='or'
         )
 
         authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
