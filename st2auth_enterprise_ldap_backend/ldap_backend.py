@@ -199,10 +199,11 @@ class LDAPAuthenticationBackend(object):
                 user_groups = set([entry.lower() for entry in user_groups])
                 required_groups = set([entry.lower() for entry in self._group_dns])
 
-                result = self._verify_user_group_membership(required_groups=required_groups,
+                result = self._verify_user_group_membership(username=username,
+                                                            required_groups=required_groups,
                                                             user_groups=user_groups,
                                                             check_behavior=self._group_dns_check)
-                return False
+                return result
             except Exception:
                 LOG.exception('Unexpected error when querying membership for user "%s".' % username)
                 return False
@@ -320,7 +321,7 @@ class LDAPAuthenticationBackend(object):
 
         return groups
 
-    def _verify_user_group_membership(self, required_groups, actual_groups,
+    def _verify_user_group_membership(self, username, required_groups, user_groups,
                                       check_behavior='and'):
         """
         Validate that the user is a member of required groups based on the check behavior defined
@@ -329,17 +330,17 @@ class LDAPAuthenticationBackend(object):
 
         if check_behavior == 'and':
             additional_msg = ('user needs to be member of all the following groups "%s" for '
-                              'authentication to succeeed'))
+                              'authentication to succeeed')
         elif check_behavior == 'or':
             additional_msg = ('user needs to be member of one or more of the following groups "%s" '
-                              'for authentication to succeeed'))
+                              'for authentication to succeeed')
 
         LOG.debug('Verifying user group membership using "%s" behavior (%s)' %
                   (check_behavior, additional_msg))
 
         msg = ('Unable to verify membership for user "%s (required_groups=%s,'
                'actual_groups=%s,check_behavior=%s)".' % (username, str(required_groups),
-                                                         str(user_groups), check_behavior))
+                                                          str(user_groups), check_behavior))
         if check_behavior == 'and':
             if not required_groups.issubset(user_groups):
                 LOG.exception(msg)
