@@ -337,6 +337,8 @@ class LDAPAuthenticationBackend(object):
             additional_msg = ('user needs to be member of one or more of the following groups "%s" '
                               'for authentication to succeeed')
 
+        additional_msg = additional_msg % (str(list(required_groups)))
+
         LOG.debug('Verifying user group membership using "%s" behavior (%s)' %
                   (check_behavior, additional_msg))
 
