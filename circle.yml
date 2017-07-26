@@ -7,8 +7,8 @@ machine:
   environment:
     IS_ENTERPRISE: 1
     DEPLOY_PACKAGES: 1
-    DISTROS: wheezy jessie trusty xenial el6 el7
-    docker_distros: wheezy centos6 centos7
+    DISTROS: trusty xenial el6 el7
+    docker_distros: trusty centos6 centos7
     docker_run: |-
                   docker run -w /code/${CIRCLE_PROJECT_REPONAME} -v ${PWD}:/code
                     -e PKG_VERSION=\$PKG_VERSION
@@ -35,7 +35,7 @@ dependencies:
     - |
         set -e
         PKG_VERSION=$(python setup.py --version 2>/dev/null)
-        PKG_RELEASE=$(.circle/packagecloud.sh next-revision wheezy ${PKG_VERSION} st2-auth-ldap)
+        PKG_RELEASE=$(.circle/packagecloud.sh next-revision trusty ${PKG_VERSION} st2-auth-ldap)
         circlerc_env PKG_VERSION PKG_RELEASE
 
 checkout:
@@ -55,9 +55,7 @@ test:
   override:
     # Build packages for supported distros on native OS inside stackstorm/buildpack container.
     - |
-        eval ${docker_run} stackstorm/buildpack:wheezy make deb
-        cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/wheezy
-        cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/jessie
+        eval ${docker_run} stackstorm/buildpack:trusty make deb
         cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/trusty
         cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/xenial
     - |
