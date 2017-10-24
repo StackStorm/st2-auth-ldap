@@ -23,7 +23,7 @@ dependencies:
     - ~/.cache/pip
   pre:
     - sudo apt-get install jq
-    - gem install package_cloud
+    - gem install package_cloud -v 0.2.45
     - make .clone_st2_repo
     - make requirements
   override:
