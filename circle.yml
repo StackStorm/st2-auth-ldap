@@ -4,6 +4,8 @@
 # PACKAGECLOUD_ORGANIZATION (default: stackstorm)
 # PACKAGECLOUD_TOKEN
 machine:
+  ruby:
+    version: ruby-2.0.0-p645
   environment:
     IS_ENTERPRISE: 1
     DEPLOY_PACKAGES: 1
@@ -23,7 +25,7 @@ dependencies:
     - ~/.cache/pip
   pre:
     - sudo apt-get install jq
-    - gem install package_cloud -v 0.2.45
+    - gem install package_cloud
     - make .clone_st2_repo
     - make requirements
   override:
