@@ -15,6 +15,10 @@ machine:
                     -e PKG_RELEASE=\$PKG_RELEASE
   services:
     - docker
+  
+  ruby:
+    version: ruby-2.0.0-p645
+  
   post:
     - cd ${CIRCLE_ARTIFACTS} && mkdir ${DISTROS}
 
