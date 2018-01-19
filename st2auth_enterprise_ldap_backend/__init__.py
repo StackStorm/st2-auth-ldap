@@ -15,7 +15,7 @@
 
 from ldap_backend import LDAPAuthenticationBackend
 
-__version__ = '2.6dev'
+__version__ = '2.6.0'
 
 __all__ = [
     'LDAPAuthenticationBackend'
