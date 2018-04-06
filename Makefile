@@ -31,8 +31,8 @@ requirements: virtualenv
 	@echo "==================== requirements ===================="
 	@echo
 
-	# Make sure we use latest version of pip
-	$(VIRTUALENV_DIR)/bin/pip install --upgrade "pip"
+	# Make sure we use latest version of pip which works
+	$(VIRTUALENV_DIR)/bin/pip install --upgrade "pip>=9.0,<9.1"
 
 	# Install requirements
 	for req in $(REQUIREMENTS); do \
