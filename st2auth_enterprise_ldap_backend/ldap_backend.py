@@ -272,7 +272,7 @@ class LDAPAuthenticationBackend(object):
         """
         # First try to get result from a local in memory cache
         groups = self._get_user_groups_from_cache(username=username)
-        is groups is not None:
+        if groups is not None:
             return groups
 
         connection = None
@@ -335,7 +335,7 @@ class LDAPAuthenticationBackend(object):
         """
         # First try to get result from a local in memory cache
         groups = self._get_user_groups_from_cache(username=username)
-        is groups is not None:
+        if groups is not None:
             return groups
 
         filter_values = [user_dn, user_dn, username]
