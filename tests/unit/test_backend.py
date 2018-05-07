@@ -887,7 +887,7 @@ class LDAPBackendTest(unittest2.TestCase):
             id_attr=LDAP_ID_ATTR,
             group_dns_check='or',
             cache_user_groups_response=True,
-            cache_user_groups_ttl=1
+            cache_user_groups_cache_ttl=1
         )
         user_groups = backend.get_user_groups(username=LDAP_USER_UID)
         self.assertEqual(user_groups, ['cn=group3,dc=stackstorm,dc=net'])
