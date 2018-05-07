@@ -891,14 +891,20 @@ class LDAPBackendTest(unittest2.TestCase):
         )
         user_groups = backend.get_user_groups(username=LDAP_USER_UID)
         self.assertEqual(user_groups, ['cn=group3,dc=stackstorm,dc=net'])
+        self.assertTrue(LDAP_USER_UID in backend._user_groups_cache)
         self.assertEqual(backend._user_groups_cache[LDAP_USER_UID],
                          ['cn=group3,dc=stackstorm,dc=net'])
 
         # After 1 second, cache entry should expire and it should result in another search_s call
         # which returns group4
-        time.sleep(2)
+        time.sleep(1.5)
 
         user_groups = backend.get_user_groups(username=LDAP_USER_UID)
         self.assertEqual(user_groups, ['cn=group4,dc=stackstorm,dc=net'])
+        self.assertTrue(LDAP_USER_UID in backend._user_groups_cache)
         self.assertEqual(backend._user_groups_cache[LDAP_USER_UID],
                          ['cn=group4,dc=stackstorm,dc=net'])
+
+        # Cache should now be empty
+        time.sleep(1.5)
+        self.assertFalse(LDAP_USER_UID in backend._user_groups_cache)
