@@ -140,45 +140,6 @@ class LDAPAuthenticationBackend(object):
         else:
             self._user_groups_cache = None
 
-    def _init_connection(self):
-        # Use CA cert bundle to validate certificate if present.
-        if self._use_ssl or self._use_tls:
-            if self._cacert:
-                ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._cacert)
-            else:
-                ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-
-        if self._debug:
-            trace_level = 2
-        else:
-            trace_level = 0
-
-        # Setup connection and options.
-        protocol = 'ldaps' if self._use_ssl else 'ldap'
-        endpoint = '%s://%s:%d' % (protocol, self._host, int(self._port))
-        connection = ldap.initialize(endpoint, trace_level=trace_level)
-        connection.set_option(ldap.OPT_DEBUG_LEVEL, 255)
-        connection.set_option(ldap.OPT_PROTOCOL_VERSION, ldap.VERSION3)
-        connection.set_option(ldap.OPT_NETWORK_TIMEOUT, self._network_timeout)
-
-        if self._chase_referrals:
-            connection.set_option(ldap.OPT_REFERRALS, 1)
-        else:
-            connection.set_option(ldap.OPT_REFERRALS, 0)
-
-        client_options = self._client_options or {}
-        for option_name, option_value in client_options.items():
-            connection.set_option(int(option_name), option_value)
-
-        if self._use_tls:
-            connection.start_tls_s()
-
-        return connection
-
-    def _clear_connection(self, connection):
-        if connection:
-            connection.unbind_s()
-
     def authenticate(self, username, password):
         connection = None
 
@@ -294,6 +255,45 @@ class LDAPAuthenticationBackend(object):
         self._set_user_groups_in_cache(username=username, groups=groups)
 
         return groups
+
+    def _init_connection(self):
+        # Use CA cert bundle to validate certificate if present.
+        if self._use_ssl or self._use_tls:
+            if self._cacert:
+                ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._cacert)
+            else:
+                ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+
+        if self._debug:
+            trace_level = 2
+        else:
+            trace_level = 0
+
+        # Setup connection and options.
+        protocol = 'ldaps' if self._use_ssl else 'ldap'
+        endpoint = '%s://%s:%d' % (protocol, self._host, int(self._port))
+        connection = ldap.initialize(endpoint, trace_level=trace_level)
+        connection.set_option(ldap.OPT_DEBUG_LEVEL, 255)
+        connection.set_option(ldap.OPT_PROTOCOL_VERSION, ldap.VERSION3)
+        connection.set_option(ldap.OPT_NETWORK_TIMEOUT, self._network_timeout)
+
+        if self._chase_referrals:
+            connection.set_option(ldap.OPT_REFERRALS, 1)
+        else:
+            connection.set_option(ldap.OPT_REFERRALS, 0)
+
+        client_options = self._client_options or {}
+        for option_name, option_value in client_options.items():
+            connection.set_option(int(option_name), option_value)
+
+        if self._use_tls:
+            connection.start_tls_s()
+
+        return connection
+
+    def _clear_connection(self, connection):
+        if connection:
+            connection.unbind_s()
 
     def _get_user_dn(self, connection, username):
         user_dn, _ = self._get_user(connection=connection, username=username)
