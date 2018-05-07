@@ -25,7 +25,6 @@ import ldap.filter
 import ldapurl
 
 from cachetools import TTLCache
-from cachetools import cached
 
 from st2auth.backends.constants import AuthBackendCapability
 
