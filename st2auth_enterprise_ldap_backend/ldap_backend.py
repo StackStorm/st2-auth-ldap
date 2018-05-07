@@ -402,7 +402,14 @@ class LDAPAuthenticationBackend(object):
             return None
 
         LOG.debug('Getting groups for user "%s" from cache' % (username))
-        return self._user_groups_cache.get(username, None)
+        result = self._user_groups_cache.get(username, None)
+
+        if result is None:
+            LOG.debug('Groups cache for user "%s" is empty' % (username))
+        else:
+            LOG.debug('Found entry for groups cache for user "%s"' % (username))
+
+        return result
 
     def _set_user_groups_in_cache(self, username, groups):
         """
