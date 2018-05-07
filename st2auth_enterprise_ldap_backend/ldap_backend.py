@@ -24,6 +24,9 @@ import ldap
 import ldap.filter
 import ldapurl
 
+from cachetools import TTLCache
+from cachetools import cached
+
 from st2auth.backends.constants import AuthBackendCapability
 
 __all__ = [
@@ -63,7 +66,8 @@ class LDAPAuthenticationBackend(object):
     def __init__(self, bind_dn, bind_password, base_ou, group_dns, host, port=389,
                  scope='subtree', id_attr='uid', use_ssl=False, use_tls=False,
                  cacert=None, network_timeout=10.0, chase_referrals=False, debug=False,
-                 client_options=None, group_dns_check='and'):
+                 client_options=None, group_dns_check='and',
+                 cache_user_groups_response=True, cache_user_groups_ttl=120):
 
         if not bind_dn:
             raise ValueError('Bind DN to query the LDAP server is not provided.')
@@ -126,6 +130,15 @@ class LDAPAuthenticationBackend(object):
 
         self._group_dns_check = group_dns_check
         self._group_dns = group_dns
+
+        self._cache_user_groups_response = cache_user_groups_response
+        self._cache_user_groups_ttl = int(cache_user_groups_ttl)
+
+        # Cache which stores LDAP groups response for a particular user
+        if self._cache_user_groups_response:
+            self._user_groups_cache = TTLCache(maxsize=100, ttl=self._cache_user_groups_ttl)
+        else:
+            self._user_groups_cache = None
 
     def _init_connection(self):
         # Use CA cert bundle to validate certificate if present.
@@ -257,6 +270,11 @@ class LDAPAuthenticationBackend(object):
 
         :rtype: ``list`` of ``str``
         """
+        # First try to get result from a local in memory cache
+        groups = self._get_user_groups_from_cache(username=username)
+        is groups is not None:
+            return groups
+
         connection = None
 
         try:
@@ -271,6 +289,9 @@ class LDAPAuthenticationBackend(object):
             return None
         finally:
             self._clear_connection(connection)
+
+        # Store result in cache (if caching is enabled)
+        self._set_user_groups_in_cache(username=username, groups=groups)
 
         return groups
 
@@ -312,6 +333,11 @@ class LDAPAuthenticationBackend(object):
 
         :rtype: ``list`` of ``str``
         """
+        # First try to get result from a local in memory cache
+        groups = self._get_user_groups_from_cache(username=username)
+        is groups is not None:
+            return groups
+
         filter_values = [user_dn, user_dn, username]
         query = ldap.filter.filter_format(USER_GROUP_MEMBERSHIP_QUERY, filter_values)
         result = connection.search_s(self._base_ou, self._scope, query, [])
@@ -320,6 +346,9 @@ class LDAPAuthenticationBackend(object):
             groups = [entry[0] for entry in result if entry[0] is not None]
         else:
             groups = []
+
+        # Store result in cache (if caching is enabled)
+        self._set_user_groups_in_cache(username=username, groups=groups)
 
         return groups
 
@@ -356,3 +385,21 @@ class LDAPAuthenticationBackend(object):
 
         # Final safe guard
         return False
+
+    def _get_user_groups_from_cache(self, username):
+        """
+        Get value from per-user group cache (if caching is enabled).
+        """
+        if not self._cache_groups_response:
+            return None
+
+        return self._user_groups_cache[username]
+
+    def _set_user_groups_in_cache(self, username, groups):
+        """
+        Store value in per-user group cache (if caching is enabled).
+        """
+        if not self._cache_groups_response:
+            return None
+
+        self._user_groups_cache[username] = groups
