@@ -66,7 +66,8 @@ class LDAPAuthenticationBackend(object):
                  scope='subtree', id_attr='uid', use_ssl=False, use_tls=False,
                  cacert=None, network_timeout=10.0, chase_referrals=False, debug=False,
                  client_options=None, group_dns_check='and',
-                 cache_user_groups_response=True, cache_user_groups_ttl=120):
+                 cache_user_groups_response=True, cache_user_groups_cache_ttl=120,
+                 cache_user_groups_cache_max_size=100):
 
         if not bind_dn:
             raise ValueError('Bind DN to query the LDAP server is not provided.')
@@ -131,11 +132,13 @@ class LDAPAuthenticationBackend(object):
         self._group_dns = group_dns
 
         self._cache_user_groups_response = cache_user_groups_response
-        self._cache_user_groups_ttl = int(cache_user_groups_ttl)
+        self._cache_user_groups_cache_ttl = int(cache_user_groups_cache_ttl)
+        self._cache_user_groups_cache_max_size = int(cache_user_groups_cache_max_size)
 
         # Cache which stores LDAP groups response for a particular user
         if self._cache_user_groups_response:
-            self._user_groups_cache = TTLCache(maxsize=100, ttl=self._cache_user_groups_ttl)
+            self._user_groups_cache = TTLCache(maxsize=self._cache_user_groups_cache_max_size,
+                                               ttl=self._cache_user_groups_cache_ttl)
         else:
             self._user_groups_cache = None
 
