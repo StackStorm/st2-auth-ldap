@@ -13,11 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ldap
 import os
+import time
+import uuid
+
+import ldap
 import mock
 import unittest2
-import uuid
 
 from st2auth_enterprise_ldap_backend import ldap_backend
 
@@ -32,6 +34,7 @@ LDAP_CACERT_REAL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 LDAP_BASE_OU = 'dc=stackstorm,dc=net'
 LDAP_ID_ATTR = 'uid'
 LDAP_USER_UID = 'stanley'
+LDAP_USER_UID_2 = 'stanley_2'
 LDAP_USER_PASSWD = 'st@nl3y'
 LDAP_USER_BAD_PASSWD = 'badbot'
 
@@ -746,3 +749,156 @@ class LDAPBackendTest(unittest2.TestCase):
 
         groups = backend.get_user_groups(username=LDAP_USER_UID)
         self.assertEqual(groups, expected)
+
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'search_s',
+        mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
+                                    [('cn=group1,dc=stackstorm,dc=net', ())],
+                                    LDAP_USER_SEARCH_RESULT,
+                                    [('cn=group1,dc=stackstorm,dc=net', ())]
+                                    ]))
+    def test_authenticate_and_get_user_groups_caching_disabled(self):
+        required_group_dns = [
+            'cn=group1,dc=stackstorm,dc=net'
+        ]
+
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            required_group_dns,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR,
+            group_dns_check='or',
+            cache_user_groups_response=False
+        )
+
+        self.assertEqual(ldap.ldapobject.SimpleLDAPObject.search_s.call_count, 0)
+
+        authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
+        self.assertTrue(authenticated)
+
+        # 1 for user dn search, 1 for groups search
+        self.assertEqual(ldap.ldapobject.SimpleLDAPObject.search_s.call_count, 2)
+
+        user_groups = backend.get_user_groups(username=LDAP_USER_UID)
+        self.assertEqual(user_groups, ['cn=group1,dc=stackstorm,dc=net'])
+        self.assertEqual(ldap.ldapobject.SimpleLDAPObject.search_s.call_count, 4)
+        self.assertTrue(backend._user_groups_cache is None)
+
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'search_s',
+        mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
+                                    [('cn=group1,dc=stackstorm,dc=net', ())],
+                                    LDAP_USER_SEARCH_RESULT,
+                                    [('cn=group1,dc=stackstorm,dc=net', ())]
+                                    ]))
+    def test_authenticate_and_get_user_groups_caching_enabled(self):
+        required_group_dns = [
+            'cn=group1,dc=stackstorm,dc=net'
+        ]
+
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            required_group_dns,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR,
+            group_dns_check='or',
+            cache_user_groups_response=True
+        )
+
+        self.assertEqual(ldap.ldapobject.SimpleLDAPObject.search_s.call_count, 0)
+
+        authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
+        self.assertTrue(authenticated)
+        self.assertEqual(ldap.ldapobject.SimpleLDAPObject.search_s.call_count, 2)
+
+        user_groups = backend.get_user_groups(username=LDAP_USER_UID)
+        self.assertEqual(user_groups, ['cn=group1,dc=stackstorm,dc=net'])
+        self.assertEqual(ldap.ldapobject.SimpleLDAPObject.search_s.call_count, 2)
+        self.assertTrue(LDAP_USER_UID in backend._user_groups_cache)
+
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'search_s',
+        mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
+                                    [('cn=group3,dc=stackstorm,dc=net', ())],
+                                    LDAP_USER_SEARCH_RESULT,
+                                    [('cn=group4,dc=stackstorm,dc=net', ())]
+                                    ]))
+    def test_get_groups_caching_no_cross_username_cache_polution(self):
+        required_group_dns = [
+            'cn=group3,dc=stackstorm,dc=net',
+            'cn=group4,dc=stackstorm,dc=net'
+        ]
+        # Test which verifies that cache items are correctly scoped per username
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            required_group_dns,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR,
+            group_dns_check='or',
+            cache_user_groups_response=True
+        )
+        user_groups = backend.get_user_groups(username=LDAP_USER_UID)
+        self.assertEqual(user_groups, ['cn=group3,dc=stackstorm,dc=net'])
+        self.assertEqual(backend._user_groups_cache[LDAP_USER_UID],
+                         ['cn=group3,dc=stackstorm,dc=net'])
+
+        user_groups = backend.get_user_groups(username=LDAP_USER_UID_2)
+        self.assertEqual(user_groups, ['cn=group4,dc=stackstorm,dc=net'])
+        self.assertEqual(backend._user_groups_cache[LDAP_USER_UID_2],
+                         ['cn=group4,dc=stackstorm,dc=net'])
+
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'search_s',
+        mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
+                                    [('cn=group3,dc=stackstorm,dc=net', ())],
+                                    LDAP_USER_SEARCH_RESULT,
+                                    [('cn=group4,dc=stackstorm,dc=net', ())]
+                                    ]))
+    def test_get_groups_caching_cache_ttl(self):
+        required_group_dns = [
+            'cn=group3,dc=stackstorm,dc=net',
+            'cn=group4,dc=stackstorm,dc=net'
+        ]
+
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            required_group_dns,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR,
+            group_dns_check='or',
+            cache_user_groups_response=True,
+            cache_user_groups_ttl=1
+        )
+        user_groups = backend.get_user_groups(username=LDAP_USER_UID)
+        self.assertEqual(user_groups, ['cn=group3,dc=stackstorm,dc=net'])
+        self.assertEqual(backend._user_groups_cache[LDAP_USER_UID],
+                         ['cn=group3,dc=stackstorm,dc=net'])
+
+        # After 1 second, cache entry should expire and it should result in another search_s call
+        # which returns group4
+        time.sleep(2)
+
+        user_groups = backend.get_user_groups(username=LDAP_USER_UID)
+        self.assertEqual(user_groups, ['cn=group4,dc=stackstorm,dc=net'])
+        self.assertEqual(backend._user_groups_cache[LDAP_USER_UID],
+                         ['cn=group4,dc=stackstorm,dc=net'])
