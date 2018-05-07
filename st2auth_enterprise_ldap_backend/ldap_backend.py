@@ -233,7 +233,7 @@ class LDAPAuthenticationBackend(object):
 
         :rtype: ``list`` of ``str``
         """
-        # First try to get result from a local in memory cache
+        # First try to get result from a local in-memory cache
         groups = self._get_user_groups_from_cache(username=username)
         if groups is not None:
             return groups
@@ -401,6 +401,7 @@ class LDAPAuthenticationBackend(object):
         if not self._cache_user_groups_response:
             return None
 
+        LOG.debug('Getting groups for user "%s" from cache' % (username))
         return self._user_groups_cache.get(username, None)
 
     def _set_user_groups_in_cache(self, username, groups):
@@ -410,4 +411,5 @@ class LDAPAuthenticationBackend(object):
         if not self._cache_user_groups_response:
             return None
 
+        LOG.debug('Storing groups for user "%s" in cache' % (username))
         self._user_groups_cache[username] = groups
