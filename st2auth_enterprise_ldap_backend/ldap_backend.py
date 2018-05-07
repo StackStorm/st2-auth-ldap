@@ -257,6 +257,9 @@ class LDAPAuthenticationBackend(object):
         return groups
 
     def _init_connection(self):
+        """
+        Initialize connection to the LDAP server.
+        """
         # Use CA cert bundle to validate certificate if present.
         if self._use_ssl or self._use_tls:
             if self._cacert:
@@ -292,6 +295,9 @@ class LDAPAuthenticationBackend(object):
         return connection
 
     def _clear_connection(self, connection):
+        """
+        Unbind and close connection to the LDAP server.
+        """
         if connection:
             connection.unbind_s()
 
@@ -390,16 +396,16 @@ class LDAPAuthenticationBackend(object):
         """
         Get value from per-user group cache (if caching is enabled).
         """
-        if not self._cache_groups_response:
+        if not self._cache_user_groups_response:
             return None
 
-        return self._user_groups_cache[username]
+        return self._user_groups_cache.get(username, None)
 
     def _set_user_groups_in_cache(self, username, groups):
         """
         Store value in per-user group cache (if caching is enabled).
         """
-        if not self._cache_groups_response:
+        if not self._cache_user_groups_response:
             return None
 
         self._user_groups_cache[username] = groups
