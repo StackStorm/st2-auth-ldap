@@ -401,13 +401,13 @@ class LDAPAuthenticationBackend(object):
         if not self._cache_user_groups_response:
             return None
 
-        LOG.debug('Getting groups for user "%s" from cache' % (username))
+        LOG.debug('Getting LDAP groups for user "%s" from cache' % (username))
         result = self._user_groups_cache.get(username, None)
 
         if result is None:
-            LOG.debug('Groups cache for user "%s" is empty' % (username))
+            LOG.debug('LDAP groups cache for user "%s" is empty' % (username))
         else:
-            LOG.debug('Found entry for groups cache for user "%s"' % (username))
+            LOG.debug('Found LDAP groups cache for user "%s"' % (username))
 
         return result
 
