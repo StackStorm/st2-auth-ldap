@@ -28,6 +28,7 @@ dependencies:
     - gem install package_cloud
     - make .clone_st2_repo
     - make requirements
+    - pip install --upgrade pip==9.0.3
   override:
     - |
         # Don't do heavy operation on all test nodes, only on 0 (step invocation)
