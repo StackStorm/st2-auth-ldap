@@ -35,7 +35,6 @@ dependencies:
           step docker pull stackstorm/buildpack:$dist
         done
     - |
-        set -e
         PKG_VERSION=$(python setup.py --version 2>/dev/null)
         PKG_RELEASE=$(.circle/packagecloud.sh next-revision trusty ${PKG_VERSION} st2-auth-ldap)
         echo $PKG_VERSION $PKG_RELEASE
