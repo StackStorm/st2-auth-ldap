@@ -28,6 +28,8 @@ dependencies:
     - gem install package_cloud
     - make .clone_st2_repo
     - make requirements
+    - python setup.py --version 2>/dev/null
+    - .circle/packagecloud.sh next-revision trusty ${PKG_VERSION} st2-auth-ldap
   override:
     - |
         # Don't do heavy operation on all test nodes, only on 0 (step invocation)
