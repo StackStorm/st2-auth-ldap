@@ -28,9 +28,7 @@ dependencies:
     - gem install package_cloud
     - make .clone_st2_repo
     - make requirements
-    - curl https://bootstrap.pypa.io/get-pip.py | python
     - pip install --upgrade pip==9.0.3
-    - python setup.py --version 2>/dev/null
   override:
     - |
         # Don't do heavy operation on all test nodes, only on 0 (step invocation)
@@ -77,7 +75,7 @@ deployment:
       - feature/circleci
     owner: StackStorm
     commands:
-      # - |
-      #     for distro in ${DISTROS}; do
-      #       .circle/packagecloud.sh deploy $distro $CIRCLE_ARTIFACTS/$distro
-      #     done
+      - |
+          for distro in ${DISTROS}; do
+            .circle/packagecloud.sh deploy $distro $CIRCLE_ARTIFACTS/$distro
+          done
