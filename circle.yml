@@ -28,6 +28,7 @@ dependencies:
     - gem install package_cloud
     - make .clone_st2_repo
     - make requirements
+    - curl https://bootstrap.pypa.io/get-pip.py | python
     - python setup.py --version 2>/dev/null
     - .circle/packagecloud.sh next-revision trusty ${PKG_VERSION} st2-auth-ldap
   override:
