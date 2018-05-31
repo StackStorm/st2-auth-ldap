@@ -75,7 +75,7 @@ deployment:
       - feature/circleci
     owner: StackStorm
     commands:
-      - |
-          for distro in ${DISTROS}; do
-            .circle/packagecloud.sh deploy $distro $CIRCLE_ARTIFACTS/$distro
-          done
+      # - |
+      #     for distro in ${DISTROS}; do
+      #       .circle/packagecloud.sh deploy $distro $CIRCLE_ARTIFACTS/$distro
+      #     done
