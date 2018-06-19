@@ -5,8 +5,16 @@
 
 ## Requirements
 
+Ubuntu / Debian
+
 ```bash
 sudo apt-get install -y python-dev libldap2-dev libsasl2-dev libssl-dev ldap-utils
+```
+
+CentOS / RHEL / Fedora
+
+```bash
+sudo dnf install python2-devel python3-devel openldap-devel
 ```
 
 ## Configuration Options
