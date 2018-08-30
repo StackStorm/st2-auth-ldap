@@ -100,6 +100,7 @@ workflows:
   version: 2
   deploy-workflow:
     jobs:
+      build:
       deploy:
         requires:
           - build
