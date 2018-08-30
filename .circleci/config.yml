@@ -17,7 +17,7 @@ jobs:
       ARTIFACTS: /artifacts
       docker_distros: trusty centos6 centos7
       docker_run: |-
-        docker run -w /code/${CIRCLE_PROJECT_REPONAME} -v ${PWD}:/code
+        docker run -w /code -v ${PWD}:/code
           -e PKG_VERSION=\$PKG_VERSION
           -e PKG_RELEASE=\$PKG_RELEASE
     steps:
