@@ -7,15 +7,15 @@ defaults: &defaults
   working_directory: ~/ldap
   docker:
     - image: ruby:2.4.4
-  environment:
-    DISTROS: trusty xenial el6 el7
-    docker_distros: trusty centos6 centos7
 
 version: 2
 jobs:
   build:
     <<: *defaults
     environment:
+      DISTROS: trusty xenial el6 el7
+      CIRCLE_ARTIFACTS: /artifacts
+      docker_distros: trusty centos6 centos7
       docker_run: |-
         docker run -w /code/${CIRCLE_PROJECT_REPONAME} -v ${PWD}:/code
           -e PKG_VERSION=\$PKG_VERSION
@@ -81,6 +81,9 @@ jobs:
             - el7
   deploy:
     <<: *defaults
+    environment:
+      CIRCLE_ARTIFACTS: /artifacts
+      DISTROS: trusty xenial el6 el7
     steps:
       - checkout
       - setup_remote_docker:
