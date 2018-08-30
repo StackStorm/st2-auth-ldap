@@ -23,80 +23,80 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
-        docker_layer_caching: true
+          docker_layer_caching: true
       - run:
-        name: Install dependencies
-        command: |
-          sudo apt-get install jq
-          gem install package_cloud
-          make .clone_st2_repo
-          make requirements
-          cd ${CIRCLE_ARTIFACTS} && mkdir ${DISTROS}
+          name: Install dependencies
+          command: |
+            sudo apt-get install jq
+            gem install package_cloud
+            make .clone_st2_repo
+            make requirements
+            cd ${CIRCLE_ARTIFACTS} && mkdir ${DISTROS}
       - run:
-        name: Pull buildpacks
-        command: |
-          for dist in $docker_distros; do
-            docker pull stackstorm/buildpack:$dist
-          done
+          name: Pull buildpacks
+          command: |
+            for dist in $docker_distros; do
+              docker pull stackstorm/buildpack:$dist
+            done
       - run:
-        name: Setup circlerc_env
-        command: |
-          set -e
-          PKG_VERSION=$(python setup.py --version 2>/dev/null)
-          PKG_RELEASE=$(.circle/packagecloud.sh next-revision wheezy ${PKG_VERSION} st2-auth-ldap)
-          circlerc_env PKG_VERSION PKG_RELEASE
+          name: Setup circlerc_env
+          command: |
+            set -e
+            PKG_VERSION=$(python setup.py --version 2>/dev/null)
+            PKG_RELEASE=$(.circle/packagecloud.sh next-revision wheezy ${PKG_VERSION} st2-auth-ldap)
+            circlerc_env PKG_VERSION PKG_RELEASE
       - run:
-        name: Post checkout
-        command: |
-          .circle/circlerc.sh
-          wget -qO - https:///github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
-          chmod 755 .circle/packagecloud.sh
+          name: Post checkout
+          command: |
+            .circle/circlerc.sh
+            wget -qO - https:///github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
+            chmod 755 .circle/packagecloud.sh
       - run:
-        name: Make lint and unit tests
-        command: |
-          make .lint
-          make .unit-tests
+          name: Make lint and unit tests
+          command: |
+            make .lint
+            make .unit-tests
       - run:
-        name: Build packages for supported distros on native OS inside stackstorm/buildpack container
-        command: |
-          eval ${docker_run} stackstorm/buildpack:wheezy make deb
-          cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/wheezy
-          cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/jessie
-          cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/trusty
-          cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/xenial
-          eval ${docker_run} stackstorm/buildpack:centos6 make rpm
-          sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el6
-          eval ${docker_run} stackstorm/buildpack:centos7 make rpm
-          sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el7
+          name: Build packages for supported distros on native OS inside stackstorm/buildpack container
+          command: |
+            eval ${docker_run} stackstorm/buildpack:wheezy make deb
+            cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/wheezy
+            cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/jessie
+            cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/trusty
+            cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/xenial
+            eval ${docker_run} stackstorm/buildpack:centos6 make rpm
+            sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el6
+            eval ${docker_run} stackstorm/buildpack:centos7 make rpm
+            sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el7
       - persist_to_workspace:
-        root: $CIRCLE_ARTIFACTS
-        paths:
-          - wheezy
-          - jessie
-          - trusty
-          - xenial
-          - el6
-          - el7
+          root: $CIRCLE_ARTIFACTS
+          paths:
+            - wheezy
+            - jessie
+            - trusty
+            - xenial
+            - el6
+            - el7
   deploy:
     <<: *defaults
     steps:
       - checkout
       - setup_remote_docker:
-        docker_layer_caching: true
+          docker_layer_caching: true
       - attach_workspace:
         at: $CIRCLE_ARTIFACTS
       - run:
-        name: Deploy to packagecloud
-        command: |
-          for distro in ${DISTROS}; do
-            .circle/packagecloud.sh deploy $distro $CIRCLE_ARTIFACTS/$distro
-          done
+          name: Deploy to packagecloud
+          command: |
+            for distro in ${DISTROS}; do
+              .circle/packagecloud.sh deploy $distro $CIRCLE_ARTIFACTS/$distro
+            done
 
 workflows:
   version: 2
   deploy-workflow:
     jobs:
-      - build
+      - build:
       - deploy:
         requires:
           - build
