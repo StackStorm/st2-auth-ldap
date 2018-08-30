@@ -28,9 +28,9 @@ jobs:
           name: Install dependencies
           command: |
             apt-get -qq update
-            apt-get install -y jq software-properties-common libsasl2-dev python3-pip python3-dev libldap2-dev libssl-dev apt-transport-https
+            apt-get install -y jq software-properties-common libsasl2-dev python-pip python-dev libldap2-dev libssl-dev apt-transport-https
             gem install package_cloud
-            pip3 install virtualenv
+            pip install virtualenv
             curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
             add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
             apt-get -qq update
@@ -49,7 +49,8 @@ jobs:
           command: |
             set -e
             .circle/circlerc.sh
-            wget -qO - https:///github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
+            source ~/.circlerc
+            wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
             chmod 755 .circle/packagecloud.sh
             source virtualenv/bin/activate
             PKG_VERSION=$(python setup.py --version 2>/dev/null)
@@ -64,6 +65,7 @@ jobs:
       - run:
           name: Build packages for supported distros on native OS inside stackstorm/buildpack container
           command: |
+            source ~/.circlerc
             eval ${docker_run} stackstorm/buildpack:trusty make deb
             cp -r ../st2-auth-ldap_*.{deb,changes} $ARTIFACTS/trusty
             cp -r ../st2-auth-ldap_*.{deb,changes} $ARTIFACTS/xenial
