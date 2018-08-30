@@ -96,7 +96,7 @@ workflows:
   version: 2
   deploy-workflow:
     jobs:
-      deploy:
+      - deploy:
         requires:
           - build
         filters:
