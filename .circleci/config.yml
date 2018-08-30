@@ -3,16 +3,19 @@
 # IS_ENTERPRISE (default: 0)
 # PACKAGECLOUD_ORGANIZATION (default: stackstorm)
 # PACKAGECLOUD_TOKEN
+defaults: &defaults
+  working_directory: ~/ldap
+  docker:
+    - image: docker:18-git
+  environment:
+    DISTROS: wheezy jessie trusty xenial el6 el7
+    docker_distros: wheezy centos6 centos7
 
 version: 2
 jobs:
   build:
-    working_directory: ~/ldap
-    docker:
-      - image: docker:18-git
+    <<: *defaults
     environment:
-      DISTROS: wheezy jessie trusty xenial el6 el7
-      docker_distros: wheezy centos6 centos7
       docker_run: |-
         docker run -w /code/${CIRCLE_PROJECT_REPONAME} -v ${PWD}:/code
           -e PKG_VERSION=\$PKG_VERSION
@@ -79,11 +82,7 @@ jobs:
           - el7
 
   deploy:
-    working_directory: ~/ldap
-    docker:
-      - image: docker:18-git
-    environment:
-      DISTROS: wheezy jessie trusty xenial el6 el7
+    <<: *defaults
     steps:
       - checkout
       - setup_remote_docker:
