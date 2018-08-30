@@ -14,7 +14,7 @@ jobs:
     <<: *defaults
     environment:
       DISTROS: trusty xenial el6 el7
-      CIRCLE_ARTIFACTS: /artifacts
+      ARTIFACTS: /artifacts
       docker_distros: trusty centos6 centos7
       docker_run: |-
         docker run -w /code/${CIRCLE_PROJECT_REPONAME} -v ${PWD}:/code
@@ -37,7 +37,7 @@ jobs:
             apt-get install -y docker-ce
             make .clone_st2_repo
             make requirements
-            cd ${CIRCLE_ARTIFACTS} && mkdir ${DISTROS}
+            mkdir ${ARTIFACTS} && cd ${ARTIFACTS} && mkdir ${DISTROS}
       - run:
           name: Pull buildpacks
           command: |
@@ -66,14 +66,16 @@ jobs:
           name: Build packages for supported distros on native OS inside stackstorm/buildpack container
           command: |
             eval ${docker_run} stackstorm/buildpack:trusty make deb
-            cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/trusty
-            cp -r ../st2-auth-ldap_*.{deb,changes} $CIRCLE_ARTIFACTS/xenial
+            cp -r ../st2-auth-ldap_*.{deb,changes} $ARTIFACTS/trusty
+            cp -r ../st2-auth-ldap_*.{deb,changes} $ARTIFACTS/xenial
             eval ${docker_run} stackstorm/buildpack:centos6 make rpm
-            mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el6
+            mv build/x86_64/st2-auth-ldap-*.rpm $ARTIFACTS/el6
             eval ${docker_run} stackstorm/buildpack:centos7 make rpm
-            mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el7
+            mv build/x86_64/st2-auth-ldap-*.rpm $ARTIFACTS/el7
+      - store_artifacts:
+          path: $ARTIFACTS
       - persist_to_workspace:
-          root: $CIRCLE_ARTIFACTS
+          root: $ARTIFACTS
           paths:
             - trusty
             - xenial
@@ -82,19 +84,19 @@ jobs:
   deploy:
     <<: *defaults
     environment:
-      CIRCLE_ARTIFACTS: /artifacts
+      ARTIFACTS: /artifacts
       DISTROS: trusty xenial el6 el7
     steps:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
       - attach_workspace:
-        at: $CIRCLE_ARTIFACTS
+        at: $ARTIFACTS
       - run:
           name: Deploy to packagecloud
           command: |
             for distro in ${DISTROS}; do
-              .circle/packagecloud.sh deploy $distro $CIRCLE_ARTIFACTS/$distro
+              .circle/packagecloud.sh deploy $distro $ARTIFACTS/$distro
             done
 
 workflows:
