@@ -49,7 +49,7 @@ jobs:
           command: |
             set -e
             PKG_VERSION=$(python setup.py --version 2>/dev/null)
-            PKG_RELEASE=$(.circle/packagecloud.sh next-revision wheezy ${PKG_VERSION} st2-auth-ldap)
+            PKG_RELEASE=$(.circle/packagecloud.sh next-revision trusty ${PKG_VERSION} st2-auth-ldap)
             circlerc_env PKG_VERSION PKG_RELEASE
       - run:
           name: Post checkout
