@@ -27,7 +27,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apt-get install jq
+            apk add --no-cache jq
             gem install package_cloud
             make .clone_st2_repo
             make requirements
