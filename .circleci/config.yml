@@ -8,8 +8,8 @@ defaults: &defaults
   docker:
     - image: docker:18-git
   environment:
-    DISTROS: wheezy jessie trusty xenial el6 el7
-    docker_distros: wheezy centos6 centos7
+    DISTROS: trusty xenial el6 el7
+    docker_distros: trusty centos6 centos7
 
 version: 2
 jobs:
@@ -96,7 +96,7 @@ workflows:
   version: 2
   deploy-workflow:
     jobs:
-      - build:
+      - build
       - deploy:
         requires:
           - build
