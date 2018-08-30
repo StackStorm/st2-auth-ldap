@@ -6,7 +6,7 @@
 defaults: &defaults
   working_directory: ~/ldap
   docker:
-    - image: docker:18-git
+    - image: ruby:2.4.4
   environment:
     DISTROS: trusty xenial el6 el7
     docker_distros: trusty centos6 centos7
@@ -27,8 +27,14 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --no-cache jq
+            apt-get -qq update
+            apt-get install -y jq software-properties-common libsasl2-dev python3-pip python3-dev libldap2-dev libssl-dev apt-transport-https
             gem install package_cloud
+            pip3 install virtualenv
+            curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+            apt-get -qq update
+            apt-get install -y docker-ce
             make .clone_st2_repo
             make requirements
             cd ${CIRCLE_ARTIFACTS} && mkdir ${DISTROS}
