@@ -48,16 +48,13 @@ jobs:
           name: Setup circlerc_env
           command: |
             set -e
+            .circle/circlerc.sh
+            wget -qO - https:///github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
+            chmod 755 .circle/packagecloud.sh
             source virtualenv/bin/activate
             PKG_VERSION=$(python setup.py --version 2>/dev/null)
             PKG_RELEASE=$(.circle/packagecloud.sh next-revision trusty ${PKG_VERSION} st2-auth-ldap)
             circlerc_env PKG_VERSION PKG_RELEASE
-      - run:
-          name: Post checkout
-          command: |
-            .circle/circlerc.sh
-            wget -qO - https:///github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
-            chmod 755 .circle/packagecloud.sh
       - run:
           name: Make lint and unit tests
           command: |
