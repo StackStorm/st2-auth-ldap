@@ -68,9 +68,6 @@ jobs:
           sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el6
           eval ${docker_run} stackstorm/buildpack:centos7 make rpm
           sudo mv build/x86_64/st2-auth-ldap-*.rpm $CIRCLE_ARTIFACTS/el7
-          #- run: 
-          #name: Save images
-          #command: |
       - persist_to_workspace:
         root: $CIRCLE_ARTIFACTS
         paths:
@@ -80,7 +77,6 @@ jobs:
           - xenial
           - el6
           - el7
-
   deploy:
     <<: *defaults
     steps:
