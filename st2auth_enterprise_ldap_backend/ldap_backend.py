@@ -24,6 +24,8 @@ import ldap
 import ldap.filter
 import ldapurl
 
+from cachetools import TTLCache
+
 from st2auth.backends.constants import AuthBackendCapability
 
 __all__ = [
@@ -63,7 +65,9 @@ class LDAPAuthenticationBackend(object):
     def __init__(self, bind_dn, bind_password, base_ou, group_dns, host, port=389,
                  scope='subtree', id_attr='uid', use_ssl=False, use_tls=False,
                  cacert=None, network_timeout=10.0, chase_referrals=False, debug=False,
-                 client_options=None, group_dns_check='and'):
+                 client_options=None, group_dns_check='and',
+                 cache_user_groups_response=True, cache_user_groups_cache_ttl=120,
+                 cache_user_groups_cache_max_size=100):
 
         if not bind_dn:
             raise ValueError('Bind DN to query the LDAP server is not provided.')
@@ -127,44 +131,16 @@ class LDAPAuthenticationBackend(object):
         self._group_dns_check = group_dns_check
         self._group_dns = group_dns
 
-    def _init_connection(self):
-        # Use CA cert bundle to validate certificate if present.
-        if self._use_ssl or self._use_tls:
-            if self._cacert:
-                ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._cacert)
-            else:
-                ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+        self._cache_user_groups_response = cache_user_groups_response
+        self._cache_user_groups_cache_ttl = int(cache_user_groups_cache_ttl)
+        self._cache_user_groups_cache_max_size = int(cache_user_groups_cache_max_size)
 
-        if self._debug:
-            trace_level = 2
+        # Cache which stores LDAP groups response for a particular user
+        if self._cache_user_groups_response:
+            self._user_groups_cache = TTLCache(maxsize=self._cache_user_groups_cache_max_size,
+                                               ttl=self._cache_user_groups_cache_ttl)
         else:
-            trace_level = 0
-
-        # Setup connection and options.
-        protocol = 'ldaps' if self._use_ssl else 'ldap'
-        endpoint = '%s://%s:%d' % (protocol, self._host, int(self._port))
-        connection = ldap.initialize(endpoint, trace_level=trace_level)
-        connection.set_option(ldap.OPT_DEBUG_LEVEL, 255)
-        connection.set_option(ldap.OPT_PROTOCOL_VERSION, ldap.VERSION3)
-        connection.set_option(ldap.OPT_NETWORK_TIMEOUT, self._network_timeout)
-
-        if self._chase_referrals:
-            connection.set_option(ldap.OPT_REFERRALS, 1)
-        else:
-            connection.set_option(ldap.OPT_REFERRALS, 0)
-
-        client_options = self._client_options or {}
-        for option_name, option_value in client_options.items():
-            connection.set_option(int(option_name), option_value)
-
-        if self._use_tls:
-            connection.start_tls_s()
-
-        return connection
-
-    def _clear_connection(self, connection):
-        if connection:
-            connection.unbind_s()
+            self._user_groups_cache = None
 
     def authenticate(self, username, password):
         connection = None
@@ -257,6 +233,11 @@ class LDAPAuthenticationBackend(object):
 
         :rtype: ``list`` of ``str``
         """
+        # First try to get result from a local in-memory cache
+        groups = self._get_user_groups_from_cache(username=username)
+        if groups is not None:
+            return groups
+
         connection = None
 
         try:
@@ -272,7 +253,55 @@ class LDAPAuthenticationBackend(object):
         finally:
             self._clear_connection(connection)
 
+        # Store result in cache (if caching is enabled)
+        self._set_user_groups_in_cache(username=username, groups=groups)
+
         return groups
+
+    def _init_connection(self):
+        """
+        Initialize connection to the LDAP server.
+        """
+        # Use CA cert bundle to validate certificate if present.
+        if self._use_ssl or self._use_tls:
+            if self._cacert:
+                ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._cacert)
+            else:
+                ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+
+        if self._debug:
+            trace_level = 2
+        else:
+            trace_level = 0
+
+        # Setup connection and options.
+        protocol = 'ldaps' if self._use_ssl else 'ldap'
+        endpoint = '%s://%s:%d' % (protocol, self._host, int(self._port))
+        connection = ldap.initialize(endpoint, trace_level=trace_level)
+        connection.set_option(ldap.OPT_DEBUG_LEVEL, 255)
+        connection.set_option(ldap.OPT_PROTOCOL_VERSION, ldap.VERSION3)
+        connection.set_option(ldap.OPT_NETWORK_TIMEOUT, self._network_timeout)
+
+        if self._chase_referrals:
+            connection.set_option(ldap.OPT_REFERRALS, 1)
+        else:
+            connection.set_option(ldap.OPT_REFERRALS, 0)
+
+        client_options = self._client_options or {}
+        for option_name, option_value in client_options.items():
+            connection.set_option(int(option_name), option_value)
+
+        if self._use_tls:
+            connection.start_tls_s()
+
+        return connection
+
+    def _clear_connection(self, connection):
+        """
+        Unbind and close connection to the LDAP server.
+        """
+        if connection:
+            connection.unbind_s()
 
     def _get_user_dn(self, connection, username):
         user_dn, _ = self._get_user(connection=connection, username=username)
@@ -312,6 +341,11 @@ class LDAPAuthenticationBackend(object):
 
         :rtype: ``list`` of ``str``
         """
+        # First try to get result from a local in memory cache
+        groups = self._get_user_groups_from_cache(username=username)
+        if groups is not None:
+            return groups
+
         filter_values = [user_dn, user_dn, username]
         query = ldap.filter.filter_format(USER_GROUP_MEMBERSHIP_QUERY, filter_values)
         result = connection.search_s(self._base_ou, self._scope, query, [])
@@ -320,6 +354,9 @@ class LDAPAuthenticationBackend(object):
             groups = [entry[0] for entry in result if entry[0] is not None]
         else:
             groups = []
+
+        # Store result in cache (if caching is enabled)
+        self._set_user_groups_in_cache(username=username, groups=groups)
 
         return groups
 
@@ -356,3 +393,30 @@ class LDAPAuthenticationBackend(object):
 
         # Final safe guard
         return False
+
+    def _get_user_groups_from_cache(self, username):
+        """
+        Get value from per-user group cache (if caching is enabled).
+        """
+        if not self._cache_user_groups_response:
+            return None
+
+        LOG.debug('Getting LDAP groups for user "%s" from cache' % (username))
+        result = self._user_groups_cache.get(username, None)
+
+        if result is None:
+            LOG.debug('LDAP groups cache for user "%s" is empty' % (username))
+        else:
+            LOG.debug('Found LDAP groups cache for user "%s"' % (username))
+
+        return result
+
+    def _set_user_groups_in_cache(self, username, groups):
+        """
+        Store value in per-user group cache (if caching is enabled).
+        """
+        if not self._cache_user_groups_response:
+            return None
+
+        LOG.debug('Storing groups for user "%s" in cache' % (username))
+        self._user_groups_cache[username] = groups

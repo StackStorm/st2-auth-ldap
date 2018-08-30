@@ -39,7 +39,7 @@ Requires: st2 openldap
   rm -rf %{buildroot}
 
 %post
-  %{pip} install --find-links %{st2wheels} --no-index --quiet st2-enterprise-auth-backend-ldap
+  %{pip} install --find-links %{st2wheels} --no-index --quiet --upgrade st2-enterprise-auth-backend-ldap
 
 %postun
   if [ $1 -eq 0 ]; then

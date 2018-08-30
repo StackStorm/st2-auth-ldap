@@ -1,34 +1,44 @@
 # LDAP Authentication Backend for StackStorm Enterprise Edition
 
-[![Circle CI Build Status](https://circleci.com/gh/StackStorm/st2-enterprise-auth-backend-ldap.svg?style=shield&circle-token=c0124395bc8e6563655ed40dc2e72b0beb44fae3)](https://circleci.com/gh/StackStorm/st2-enterprise-auth-backend-ldap)
+[![Circle CI Build Status](https://circleci.com/gh/StackStorm/st2-enterprise-auth-backend-ldap.svg?style=shield&circle-token=3bfc47f8b1f7af9c1845ea79df2c18e0f32cc509)](https://circleci.com/gh/StackStorm/st2-enterprise-auth-backend-ldap)
 [![IRC](https://img.shields.io/irc/%23stackstorm.png)](http://webchat.freenode.net/?channels=stackstorm)
 
 ## Requirements
+
+Ubuntu / Debian
 
 ```bash
 sudo apt-get install -y python-dev libldap2-dev libsasl2-dev libssl-dev ldap-utils
 ```
 
+CentOS / RHEL / Fedora
+
+```bash
+sudo dnf install python2-devel python3-devel openldap-devel
+```
+
 ## Configuration Options
 
-| option          | required | default | description                                                                                                                    |
-|-----------------|----------|---------|--------------------------------------------------------------------------------------------------------------------------------|
-| bind_dn         | yes      |         | DN of the service account to bind with the LDAP server                                                                         |
-| bind_password   | yes      |         | Password of the service account                                                                                                |
-| base_ou         | yes      |         | Base OU to search for user and group entries                                                                                   |
-| group_dns       | yes      |         | Which groups user must be member of to be granted access                                                                       |
-| group_dns_check | no       | and     | What kind of check to perform when validating user group membership (``and`` / ``or``). When ``and`` behavior is used, user needs to be part of all the specified groups and when ``or`` behavior is used, user needs to be part of at least one or more of the specified groups.                                                         |
-| host            | yes      |         | Hostname of the LDAP server                                                                                                    |
-| port            | yes      |         | Port of the LDAP server                                                                                                        |
-| use_ssl         | no       | false   | Use LDAPS to connect                                                                                                           |
-| use_tls         | no       | false   | Start TLS on LDAP to connect                                                                                                   |
-| cacert          | no       | None    | Path to the CA cert used to validate certificate                                                                               |
-| id_attr         | no       | uid     | Field name of the user ID attribute                                                                                            |
-| scope           | no       | subtree | Search scope (base, onelevel, or subtree)                                                                                      |
-| network_timeout | no       | 10.0    | Timeout for network operations (in seconds)                                                                                    |
-| chase_referrals | no       | false   | True if the referrals should be automatically chased within the underlying LDAP C lib                                          |
-| debug           | no       | false   | Enable debug mode. When debug mode is enabled all the calls (including the results) to LDAP server are logged                  |
-| client_options  | no       |         | A dictionary with additional Python LDAP client options which can be passed to ``set_connection()`` method                     |
+| option                     | required | default | description                                                                                                                    |
+|----------------------------|----------|---------|--------------------------------------------------------------------------------------------------------------------------------|
+| bind_dn                    | yes      |         | DN of the service account to bind with the LDAP server                                                                         |
+| bind_password              | yes      |         | Password of the service account                                                                                                |
+| base_ou                    | yes      |         | Base OU to search for user and group entries                                                                                   |
+| group_dns                  | yes      |         | Which groups user must be member of to be granted access                                                                       |
+| group_dns_check            | no       | and     | What kind of check to perform when validating user group membership (``and`` / ``or``). When ``and`` behavior is used, user needs to be part of all the specified groups and when ``or`` behavior is used, user needs to be part of at least one or more of the specified groups.                                                         |
+| host                       | yes      |         | Hostname of the LDAP server                                                                                                    |
+| port                       | yes      |         | Port of the LDAP server                                                                                                        |
+| use_ssl                    | no       | false   | Use LDAPS to connect                                                                                                           |
+| use_tls                    | no       | false   | Start TLS on LDAP to connect                                                                                                   |
+| cacert                     | no       | None    | Path to the CA cert used to validate certificate                                                                               |
+| id_attr                    | no       | uid     | Field name of the user ID attribute                                                                                            |
+| scope                      | no       | subtree | Search scope (base, onelevel, or subtree)                                                                                      |
+| network_timeout            | no       | 10.0    | Timeout for network operations (in seconds)                                                                                    |
+| chase_referrals            | no       | false   | True if the referrals should be automatically chased within the underlying LDAP C lib                                          |
+| debug                      | no       | false   | Enable debug mode. When debug mode is enabled all the calls (including the results) to LDAP server are logged                  |
+| client_options             | no       |         | A dictionary with additional Python LDAP client options which can be passed to ``set_connection()`` method                     |
+| cache_user_groups_response | no       | true    | When true, LDAP user groups response is cached for 120 seconds (by default) in memory. This decreases load on LDAP server and increases performance when remote LDAP group to RBAC role sync is enabled and / or when the same user authenticates concurrency in a short time frame. Keep in mind that even when this feature is enabled, single (authenticate) request to LDAP server will still be performed when user authenticates to st2auth - authentication information is not cached - only user groups are cached.  |
+| cache_user_groups_ttl      | no       | 120     | How long (in seconds)                                                                                                          |
 
 ## Configuration Example
 
