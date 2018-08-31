@@ -76,17 +76,17 @@ jobs:
           command: |
             source ~/.circlerc
             eval ${docker_run} stackstorm/buildpack:trusty make deb
-            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}-2_amd64.deb $ARTIFACTS/trusty
-            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}-2_amd64.changes $ARTIFACTS/trusty
+            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/trusty
+            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/trusty
             cp $ARTIFACTS/trusty/* $ARTIFACTS/xenial
             eval ${docker_run} stackstorm/buildpack:centos6 make rpm
-            docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}-2.x86_64.rpm $ARTIFACTS/el6
+            docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el6
             eval ${docker_run} stackstorm/buildpack:centos7 make rpm
-            docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}-2.x86_64.rpm $ARTIFACTS/el7
+            docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el7
       - store_artifacts:
-          path: $ARTIFACTS
+          path: /artifacts
       - persist_to_workspace:
-          root: $ARTIFACTS
+          root: /artifacts
           paths:
             - trusty
             - xenial
@@ -99,10 +99,19 @@ jobs:
       DISTROS: trusty xenial el6 el7
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - attach_workspace:
         at: $ARTIFACTS
+      - run:
+          name: List workspace files
+          command: find $ARTIFACTS | sed 's|[^/]*/|  |g'
+      - run:
+          name: Install dependencies
+          command: |
+            set -x
+            sudo apt-get -y install jq
+            wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
+            chmod 755 .circle/packagecloud.sh
+            gem install package_cloud
       - run:
           name: Deploy to packagecloud
           command: |
