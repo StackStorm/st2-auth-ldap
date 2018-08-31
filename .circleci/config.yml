@@ -99,7 +99,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-        at: $ARTIFACTS
+          at: $ARTIFACTS
       - run:
           name: List workspace files
           command: find $ARTIFACTS | sed 's|[^/]*/|  |g'
@@ -120,7 +120,7 @@ jobs:
 
 workflows:
   version: 2
-  deploy-workflow:
+  build-deploy-workflow:
     jobs:
       - build
       - deploy:
