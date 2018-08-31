@@ -99,7 +99,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: $ARTIFACTS
+          at: /artifacts
       - run:
           name: List workspace files
           command: find $ARTIFACTS | sed 's|[^/]*/|  |g'
