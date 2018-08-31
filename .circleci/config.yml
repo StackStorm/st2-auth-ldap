@@ -1,0 +1,134 @@
+# Setup in CircleCI account the following ENV variables:
+# IS_PRODUCTION (default: 0)
+# IS_ENTERPRISE (default: 0)
+# PACKAGECLOUD_ORGANIZATION (default: stackstorm)
+# PACKAGECLOUD_TOKEN
+defaults: &defaults
+  working_directory: ~/ldap
+  docker:
+    - image: ruby:2.4.4
+
+version: 2
+jobs:
+  build:
+    <<: *defaults
+    environment:
+      DISTROS: trusty xenial el6 el7
+      ARTIFACTS: /artifacts
+      docker_distros: trusty centos6 centos7
+      docker_run: |-
+        docker run -w /code/ldap --volumes-from st2-ldap-vol
+          -e PKG_VERSION=$PKG_VERSION
+          -e PKG_RELEASE=$PKG_RELEASE
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Install dependencies
+          command: |
+            curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+            apt-get -qq update
+            apt-get install -y jq software-properties-common libsasl2-dev python-pip python-virtualenv python-dev libldap2-dev apt-transport-https
+            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+            apt-get -qq update
+            apt-get install -y docker-ce
+            gem install package_cloud
+            make .clone_st2_repo
+            make requirements
+            mkdir ${ARTIFACTS} && cd ${ARTIFACTS} && mkdir ${DISTROS}
+      - run:
+          name: Pull buildpacks
+          command: |
+            for dist in $docker_distros; do
+              docker pull stackstorm/buildpack:$dist
+            done
+      - run:
+          name: Setup circlerc_env
+          command: |
+            set -e
+            .circle/circlerc.sh
+            source ~/.circlerc
+            wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
+            chmod 755 .circle/packagecloud.sh
+            source virtualenv/bin/activate
+            PKG_VERSION=$(python setup.py --version 2>/dev/null)
+            PKG_RELEASE=$(.circle/packagecloud.sh next-revision trusty ${PKG_VERSION} st2-auth-ldap)
+            circlerc_env PKG_VERSION PKG_RELEASE
+      - run:
+          name: Make lint and unit tests
+          command: |
+            source virtualenv/bin/activate
+            make .lint
+            make .unit-tests
+      - run:
+          # Workaround for CircleCI docker-compose limitation where volumes don't work
+          # See detailed explanation: https://circleci.com/docs/2.0/building-docker-images/#mounting-folders
+          name: Copy st2-packages files to build containers
+          command: |
+            # creating dummy container which will hold a volume with data files
+            docker create -v /code --name st2-ldap-vol alpine:3.4 /bin/true
+            # copy st2-packages data files into this volume
+            docker cp ~/ldap st2-ldap-vol:/code
+      - run:
+          name: Build packages for supported distros on native OS inside stackstorm/buildpack container
+          command: |
+            source ~/.circlerc
+            eval ${docker_run} stackstorm/buildpack:trusty make deb
+            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/trusty
+            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/trusty
+            cp $ARTIFACTS/trusty/* $ARTIFACTS/xenial
+            eval ${docker_run} stackstorm/buildpack:centos6 make rpm
+            docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el6
+            eval ${docker_run} stackstorm/buildpack:centos7 make rpm
+            docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el7
+      - store_artifacts:
+          path: /artifacts
+      - persist_to_workspace:
+          root: /artifacts
+          paths:
+            - trusty
+            - xenial
+            - el6
+            - el7
+  deploy:
+    <<: *defaults
+    environment:
+      ARTIFACTS: /artifacts
+      DISTROS: trusty xenial el6 el7
+    steps:
+      - checkout
+      - attach_workspace:
+        at: $ARTIFACTS
+      - run:
+          name: List workspace files
+          command: find $ARTIFACTS | sed 's|[^/]*/|  |g'
+      - run:
+          name: Install dependencies
+          command: |
+            set -x
+            apt-get -y install jq
+            wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
+            chmod 755 .circle/packagecloud.sh
+            gem install package_cloud
+      - run:
+          name: Deploy to packagecloud
+          command: |
+            for distro in ${DISTROS}; do
+              .circle/packagecloud.sh deploy $distro $ARTIFACTS/$distro
+            done
+
+workflows:
+  version: 2
+  deploy-workflow:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - master
+                - /v[0-9]+\.[0-9]+/
+                - feature/circleci
