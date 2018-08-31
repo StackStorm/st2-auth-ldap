@@ -27,14 +27,13 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apt-get -qq update
-            apt-get install -y jq software-properties-common libsasl2-dev python-pip python-dev libldap2-dev libssl-dev apt-transport-https
-            gem install package_cloud
-            pip install virtualenv
             curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+            apt-get -qq update
+            apt-get install -y jq software-properties-common libsasl2-dev python-pip python-virtualenv python-dev libldap2-dev apt-transport-https
             add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
             apt-get -qq update
             apt-get install -y docker-ce
+            gem install package_cloud
             make .clone_st2_repo
             make requirements
             mkdir ${ARTIFACTS} && cd ${ARTIFACTS} && mkdir ${DISTROS}
@@ -63,7 +62,7 @@ jobs:
             make .lint
             make .unit-tests
       - run:
-          # Workaround for CircleCI docker-compose limtation where volumes don't work
+          # Workaround for CircleCI docker-compose limitation where volumes don't work
           # See detailed explanation: https://circleci.com/docs/2.0/building-docker-images/#mounting-folders
           name: Copy st2-packages files to build containers
           command: |
@@ -108,7 +107,7 @@ jobs:
           name: Install dependencies
           command: |
             set -x
-            sudo apt-get -y install jq
+            apt-get -y install jq
             wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
             chmod 755 .circle/packagecloud.sh
             gem install package_cloud
