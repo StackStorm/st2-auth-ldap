@@ -107,6 +107,7 @@ jobs:
           name: Install dependencies
           command: |
             set -x
+            apt-get -qq update
             apt-get -y install jq
             wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
             chmod 755 .circle/packagecloud.sh
