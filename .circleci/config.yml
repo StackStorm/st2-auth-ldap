@@ -13,7 +13,7 @@ jobs:
   build:
     <<: *defaults
     environment:
-      DISTROS: trusty xenial el6 el7
+      DISTROS: trusty xenial bionic el6 el7
       ARTIFACTS: /artifacts
       docker_distros: trusty centos6 centos7
       docker_run: |-
@@ -78,6 +78,7 @@ jobs:
             docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/trusty
             docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/trusty
             cp $ARTIFACTS/trusty/* $ARTIFACTS/xenial
+            cp $ARTIFACTS/trusty/* $ARTIFACTS/bionic
             eval ${docker_run} stackstorm/buildpack:centos6 make rpm
             docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el6
             eval ${docker_run} stackstorm/buildpack:centos7 make rpm
@@ -89,13 +90,14 @@ jobs:
           paths:
             - trusty
             - xenial
+            - bionic
             - el6
             - el7
   deploy:
     <<: *defaults
     environment:
       ARTIFACTS: /artifacts
-      DISTROS: trusty xenial el6 el7
+      DISTROS: trusty xenial bionic el6 el7
     steps:
       - checkout
       - attach_workspace:
