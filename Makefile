@@ -40,6 +40,12 @@ COMPONENT_PYTHONPATH = $(subst $(space_char),:,$(realpath $(COMPONENTS)))
 
 .PHONY: play
 play:
+	@echo "DEBIAN=$(DEBIAN)"
+	@echo "REDHAT=$(REDHAT)"
+	@echo "DEB_DISTRO=$(DEB_DISTRO)"
+	@echo "DEB_DISTRO_NAME=$(DEB_DISTRO_NAME)"
+	@echo "PYTHON_BINARY=$(PYTHON_BINARY)"
+	@echo "PIP_BINARY=$(PIP_BINARY)"
 	@echo COMPONENT_PYTHONPATH=$(COMPONENT_PYTHONPATH)
 
 .PHONY: requirements

@@ -76,20 +76,21 @@ jobs:
             source ~/.circlerc
             # 1. Build Trusty and Xenial packages
             # NOTE: We can re-use the same packages because both distros use same Python 2.7 version
-            eval ${docker_run} stackstorm/buildpack:trusty make deb
+            eval ${docker_run} stackstorm/buildpack:trusty make play deb
             docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/trusty
             docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/trusty
             cp $ARTIFACTS/trusty/* $ARTIFACTS/xenial
             # 2. Build Bionic packages
             # NOTE: We can't reuse Xenial / Trusty packages because Bionic uses Python 3
-            eval ${docker_run} stackstorm/packagingbuild:bionic make deb
+            eval ${docker_run} stackstorm/packagingbuild:bionic make play deb
             docker exec -it st2-ldap-vol rm -rf /code/
             docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/bionic
             docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/bionic
-            # 3. Build RHEL packages
-            eval ${docker_run} stackstorm/buildpack:centos6 make rpm
+            # 3. Build RHEL 6 packages
+            eval ${docker_run} stackstorm/buildpack:centos6 make play rpm
             docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el6
-            eval ${docker_run} stackstorm/buildpack:centos7 make rpm
+            # 4. Build RHEL 7 packages
+            eval ${docker_run} stackstorm/buildpack:centos7 make play rpm
             docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el7
       - store_artifacts:
           path: /artifacts
