@@ -134,7 +134,7 @@ install_wheel:
 # This step is arch-dependent and must be called only on prepared environment,
 # it's run inside stackstorm/buildpack containers.
 install_deps:
-	$(PIP_BINARY) wheel --wheel-dir=$(DESTDIR)/$(WHEELSDIR) -r requirements.txt
+	$(PYTHON_BINARY) -m pip wheel --wheel-dir=$(DESTDIR)/$(WHEELSDIR) -r requirements.txt
 	# Well welcome to enterprise (rhel).
 	# Hardcore workaround to make wheel installable on any platform.
 	cd $(DESTDIR)/$(WHEELSDIR); \
