@@ -2,9 +2,7 @@ SHELL := /bin/bash
 PKG_NAME := st2-auth-ldap
 PKG_RELEASE ?= 1
 WHEELSDIR ?= opt/stackstorm/share/wheels
-CHANGELOG_COMMENT ?= "automated build, version: $(PKG_VERSION)"
 #DEB_EPOCH := $(shell echo $(PKG_VERSION) | grep -q dev || echo '1')
-DEB_DISTRO := $(shell [ -z $(DEB_EPOCH) ] && echo unstable || echo stable)
 VIRTUALENV_DIR ?= virtualenv
 
 ST2_REPO_PATH ?= /tmp/st2
@@ -12,13 +10,13 @@ ST2_REPO_BRANCH ?= master
 
 ifneq (,$(wildcard /etc/debian_version))
 	DEBIAN := 1
-	DEB_DISTRO_NAME := $(shell lsb_release -cs)
+	DEB_DISTRO := $(shell lsb_release -cs)
 else
 	REDHAT := 1
-	DEB_DISTRO_NAME := unstable
+	DEB_DISTRO := unstable
 endif
 
-ifeq ($(DEB_DISTRO_NAME),bionic)
+ifeq ($(DEB_DISTRO),bionic)
 	PYTHON_BINARY := /usr/bin/python3
 	PIP_BINARY := /usr/bin/pip3
 else
@@ -27,6 +25,7 @@ else
 endif
 
 PKG_VERSION := $(shell $(PYTHON_BINARY) setup.py --version 2>/dev/null)
+CHANGELOG_COMMENT ?= "automated build, version: $(PKG_VERSION)"
 
 REQUIREMENTS := test-requirements.txt requirements.txt
 PIP_OPTIONS := $(ST2_PIP_OPTIONS)
@@ -43,7 +42,6 @@ play:
 	@echo "DEBIAN=$(DEBIAN)"
 	@echo "REDHAT=$(REDHAT)"
 	@echo "DEB_DISTRO=$(DEB_DISTRO)"
-	@echo "DEB_DISTRO_NAME=$(DEB_DISTRO_NAME)"
 	@echo "PYTHON_BINARY=$(PYTHON_BINARY)"
 	@echo "PIP_BINARY=$(PIP_BINARY)"
 	@echo "PKG_VERSION=$(PKG_VERSION)"
