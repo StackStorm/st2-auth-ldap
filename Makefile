@@ -1,7 +1,6 @@
 SHELL := /bin/bash
 PKG_NAME := st2-auth-ldap
 PKG_RELEASE ?= 1
-PKG_VERSION := $(shell python setup.py --version 2>/dev/null)
 WHEELSDIR ?= opt/stackstorm/share/wheels
 CHANGELOG_COMMENT ?= "automated build, version: $(PKG_VERSION)"
 #DEB_EPOCH := $(shell echo $(PKG_VERSION) | grep -q dev || echo '1')
@@ -27,6 +26,7 @@ else
 	PIP_BINARY := pip
 endif
 
+PKG_VERSION := $(shell $(PYTHON_BINARY) setup.py --version 2>/dev/null)
 
 REQUIREMENTS := test-requirements.txt requirements.txt
 PIP_OPTIONS := $(ST2_PIP_OPTIONS)
@@ -46,7 +46,7 @@ play:
 	@echo "DEB_DISTRO_NAME=$(DEB_DISTRO_NAME)"
 	@echo "PYTHON_BINARY=$(PYTHON_BINARY)"
 	@echo "PIP_BINARY=$(PIP_BINARY)"
-	@echo COMPONENT_PYTHONPATH=$(COMPONENT_PYTHONPATH)
+	@echo "PKG_VERSION=$(PKG_VERSION)"
 
 .PHONY: requirements
 requirements: virtualenv
