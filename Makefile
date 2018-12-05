@@ -11,6 +11,23 @@ VIRTUALENV_DIR ?= virtualenv
 ST2_REPO_PATH ?= /tmp/st2
 ST2_REPO_BRANCH ?= master
 
+ifneq (,$(wildcard /etc/debian_version))
+	DEBIAN := 1
+	DEB_DISTRO_NAME := $(shell lsb_release -cs)
+else
+	REDHAT := 1
+	DEB_DISTRO_NAME := unstable
+endif
+
+ifeq ($(DEB_DISTRO_NAME),bionic)
+	PYTHON_BINARY := /usr/bin/python3
+	PIP_BINARY := /usr/bin/pip3
+else
+	PYTHON_BINARY := python
+	PIP_BINARY := pip
+endif
+
+
 REQUIREMENTS := test-requirements.txt requirements.txt
 PIP_OPTIONS := $(ST2_PIP_OPTIONS)
 
@@ -109,12 +126,12 @@ install: install_wheel install_deps
 
 install_wheel:
 	install -d $(DESTDIR)/$(WHEELSDIR)
-	python setup.py bdist_wheel -d $(DESTDIR)/$(WHEELSDIR)
+	$(PIP_BINARY) setup.py bdist_wheel -d $(DESTDIR)/$(WHEELSDIR)
 
 # This step is arch-dependent and must be called only on prepared environment,
 # it's run inside stackstorm/buildpack containers.
 install_deps:
-	pip wheel --wheel-dir=$(DESTDIR)/$(WHEELSDIR) -r requirements.txt
+	$(PIP_BINARY) wheel --wheel-dir=$(DESTDIR)/$(WHEELSDIR) -r requirements.txt
 	# Well welcome to enterprise (rhel).
 	# Hardcore workaround to make wheel installable on any platform.
 	cd $(DESTDIR)/$(WHEELSDIR); \
