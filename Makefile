@@ -126,7 +126,7 @@ install: install_wheel install_deps
 
 install_wheel:
 	install -d $(DESTDIR)/$(WHEELSDIR)
-	$(PIP_BINARY) setup.py bdist_wheel -d $(DESTDIR)/$(WHEELSDIR)
+	$(PYTHON_BINARY) setup.py bdist_wheel -d $(DESTDIR)/$(WHEELSDIR)
 
 # This step is arch-dependent and must be called only on prepared environment,
 # it's run inside stackstorm/buildpack containers.
