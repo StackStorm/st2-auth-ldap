@@ -84,7 +84,7 @@ jobs:
             # NOTE: We can't reuse Xenial / Trusty packages because Bionic uses Python 3
             # NOTE: There is a weird issue / bug in Bionic setuptools so we need to upgrade
             # it for setup.py to work
-            eval ${docker_run} stackstorm/packagingbuild:bionic "python3 -m pip install --upgrade setuptools ; make play deb"
+            eval ${docker_run} stackstorm/packagingbuild:bionic make play deb
             docker exec -it st2-ldap-vol rm -rf /code/
             docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/bionic
             docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/bionic

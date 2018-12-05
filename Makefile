@@ -24,7 +24,8 @@ else
 	PIP_BINARY := pip
 endif
 
-PKG_VERSION := $(shell $(PYTHON_BINARY) setup.py --version)
+# NOTE: We remove trailing "0" which is added at the end by newer versions of pip
+PKG_VERSION := $(shell $(PYTHON_BINARY) setup.py --version 2> /dev/null | sed 's/0$$//')
 CHANGELOG_COMMENT ?= "automated build, version: $(PKG_VERSION)"
 
 REQUIREMENTS := test-requirements.txt requirements.txt
