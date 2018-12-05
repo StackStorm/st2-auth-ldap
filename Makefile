@@ -16,7 +16,7 @@ else
 	DEB_DISTRO := unstable
 endif
 
-ifeq ($(DEB_DISTRO),bionic)
+ifeq ($(DEB_DISTRO),bionicx)
 	PYTHON_BINARY := /usr/bin/python3
 	PIP_BINARY := /usr/bin/pip3
 else
