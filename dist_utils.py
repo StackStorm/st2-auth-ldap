@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Licensed to the StackStorm, Inc ('StackStorm') under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -13,8 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
+from __future__ import absolute_import
+import os
 import re
+import sys
 
 from distutils.version import StrictVersion
 
@@ -42,20 +45,24 @@ except ImportError:
         print('Using pip: %s' % (str(pip_version)))
         sys.exit(1)
 
-
 __all__ = [
     'check_pip_version',
-    'fetch_requirements'
+    'fetch_requirements',
+    'apply_vagrant_workaround',
+    'get_version_string',
+    'parse_version_string'
 ]
 
 
-def check_pip_version():
+def check_pip_version(min_version='6.0.0'):
     """
     Ensure that a minimum supported version of pip is installed.
     """
-    if StrictVersion(pip.__version__) < StrictVersion('6.0.0'):
-        print("Upgrade pip, your version `{0}' "
-              "is outdated:\n{1}".format(pip.__version__, GET_PIP))
+    if StrictVersion(pip.__version__) < StrictVersion(min_version):
+        print("Upgrade pip, your version '{0}' "
+              "is outdated. Minimum required version is '{1}':\n{2}".format(pip.__version__,
+                                                                            min_version,
+                                                                            GET_PIP))
         sys.exit(1)
 
 
@@ -66,23 +73,39 @@ def fetch_requirements(requirements_file_path):
     links = []
     reqs = []
     for req in parse_requirements(requirements_file_path, session=False):
-        if getattr(req, 'link', None):
-            links.append(str(req.link))
+        # Note: req.url was used before 9.0.0 and req.link is used in all the recent versions
+        link = getattr(req, 'link', getattr(req, 'url', None))
+        if link:
+            links.append(str(link))
         reqs.append(str(req.req))
     return (reqs, links)
 
 
-def parse_version_string(file_path):
+def apply_vagrant_workaround():
     """
-    Parse __version__ = 'xxx' from the specifed file
+    Function which detects if the script is being executed inside vagrant and if it is, it deletes
+    "os.link" attribute.
+    Note: Without this workaround, setup.py sdist will fail when running inside a shared directory
+    (nfs / virtualbox shared folders).
     """
-    version = None
-    with open(file_path, 'r') as fd:
-        match = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
-                          fd.read(), re.MULTILINE)
-    if match:
-        version = match.group(1)
-    else:
-        raise Exception('File %s doesn\'t contain __version__ = \'x.y.z\' string')
+    if os.environ.get('USER', None) == 'vagrant':
+        del os.link
 
-    return version
+
+def get_version_string(init_file):
+    """
+    Read __version__ string for an init file.
+    """
+
+    with open(init_file, 'r') as fp:
+        content = fp.read()
+        version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                                  content, re.M)
+        if version_match:
+            return version_match.group(1)
+
+        raise RuntimeError('Unable to find version string in %s.' % (init_file))
+
+
+# alias for get_version_string
+parse_version_string = get_version_string
