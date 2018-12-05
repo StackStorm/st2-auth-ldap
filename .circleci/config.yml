@@ -82,7 +82,7 @@ jobs:
             cp $ARTIFACTS/trusty/* $ARTIFACTS/xenial
             # 2. Build Bionic packages
             # NOTE: We can't reuse Xenial / Trusty packages because Bionic uses Python 3
-            eval ${docker_run} stackstorm/packagingbuild:bionic make play deb
+            eval ${docker_run} stackstorm/packagingbuild:bionic pip3 install --upgrade pip ; make play deb
             docker exec -it st2-ldap-vol rm -rf /code/
             docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/bionic
             docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/bionic
