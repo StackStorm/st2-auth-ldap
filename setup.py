@@ -20,8 +20,9 @@ from dist_utils import check_pip_version
 from dist_utils import fetch_requirements
 from dist_utils import parse_version_string
 # Monkey patch to avoid version normalization like '2.9dev' -> '2.9.dev0', (https://github.com/pypa/setuptools/issues/308)
-from setuptools.extern.packaging import version
-version.Version = version.LegacyVersion
+# NOTE: This doesn't work under Bionic
+# from setuptools.extern.packaging import version
+# version.Version = version.LegacyVersion
 
 check_pip_version()
 
