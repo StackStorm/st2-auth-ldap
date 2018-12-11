@@ -26,7 +26,7 @@ endif
 
 # NOTE: We remove trailing "0" which is added at the end by newer versions of pip
 # For example: 3.0.dev0 -> 3.0.dev
-PKG_VERSION := $(shell $(PYTHON_BINARY) setup.py --version 2> /dev/null | sed 's/dev0$$/dev/')
+PKG_VERSION := $(shell $(PYTHON_BINARY) setup.py --version 2> /dev/null | sed 's/\.dev[0-9]$$/dev/')
 CHANGELOG_COMMENT ?= "automated build, version: $(PKG_VERSION)"
 
 REQUIREMENTS := test-requirements.txt requirements.txt
