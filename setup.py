@@ -1,17 +1,7 @@
-# Licensed to the StackStorm, Inc ('StackStorm') under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Copyright (c) Extreme Networks, Inc - All Rights Reserved
+# Unauthorized copying of this file, via any medium is strictly prohibited
+# Proprietary and confidential.
+# See the LICENSE file included with this work for details.
 
 import os
 
@@ -40,17 +30,15 @@ setup(
     author='StackStorm, Inc.',
     author_email='info@stackstorm.com',
     url='https://github.com/StackStorm/st2-enterprise-auth-backend-ldap',
-    license='Apache License (2.0)',
+    license='Proprietary License',
     download_url='https://github.com/StackStorm/st2-enterprise-auth-backend-ldap/tarball/master',
     classifiers=[
-        'Development Status :: 3 - Alpha',
-        'License :: OSI Approved :: Apache Software License',
+        'License :: Other/Proprietary License'
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
-        'Intended Audience :: Developers',
         'Environment :: Console',
     ],
     platforms=['Any'],
