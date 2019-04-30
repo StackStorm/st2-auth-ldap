@@ -43,7 +43,7 @@ Requires: st2 openldap
 
 %postun
   if [ $1 -eq 0 ]; then
-    echo y | %{pip} uninstall st2-enterprise-auth-backend-ldap 1>/dev/null || :
+    %{pip} uninstall -y --quiet st2-enterprise-auth-backend-ldap 1>/dev/null || :
   fi
 
 %files
