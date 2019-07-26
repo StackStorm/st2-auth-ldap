@@ -29,9 +29,9 @@ setup(
     description='StackStorm enterprise authentication backend for LDAP.',
     author='StackStorm, Inc.',
     author_email='info@stackstorm.com',
-    url='https://github.com/StackStorm/st2-enterprise-auth-backend-ldap',
+    url='https://github.com/extremenetworks/st2-enterprise-auth-backend-ldap',
     license='Proprietary License',
-    download_url='https://github.com/StackStorm/st2-enterprise-auth-backend-ldap/tarball/master',
+    download_url='https://github.com/extremenetworks/st2-enterprise-auth-backend-ldap/tarball/master',
     classifiers=[
         'License :: Other/Proprietary License'
         'Programming Language :: Python',

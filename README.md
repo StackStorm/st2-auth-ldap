@@ -1,6 +1,6 @@
 # LDAP Authentication Backend for StackStorm Enterprise Edition
 
-[![Circle CI Build Status](https://circleci.com/gh/StackStorm/st2-enterprise-auth-backend-ldap.svg?style=shield&circle-token=3bfc47f8b1f7af9c1845ea79df2c18e0f32cc509)](https://circleci.com/gh/StackStorm/st2-enterprise-auth-backend-ldap)
+[![Circle CI Build Status](https://circleci.com/gh/extremenetworks/st2-enterprise-auth-backend-ldap.svg?style=shield&circle-token=3bfc47f8b1f7af9c1845ea79df2c18e0f32cc509)](https://circleci.com/gh/extremenetworks/st2-enterprise-auth-backend-ldap)
 
 ## Requirements
 
