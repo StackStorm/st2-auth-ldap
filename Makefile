@@ -2,7 +2,6 @@ SHELL := /bin/bash
 PKG_NAME := st2-auth-ldap
 PKG_RELEASE ?= 1
 WHEELSDIR ?= opt/stackstorm/share/wheels
-#DEB_EPOCH := $(shell echo $(PKG_VERSION) | grep -q dev || echo '1')
 VIRTUALENV_DIR ?= virtualenv
 
 ST2_REPO_PATH ?= /tmp/st2
@@ -11,14 +10,19 @@ ST2_REPO_BRANCH ?= master
 ifneq (,$(wildcard /etc/debian_version))
 	DEBIAN := 1
 	DEB_DISTRO := $(shell lsb_release -cs)
+	REDHAT_DISTRO := 0
 else
 	REDHAT := 1
+	REDHAT_DISTRO := $(shell rpm --eval '%{rhel}')
 	DEB_DISTRO := unstable
 endif
 
 ifeq ($(DEB_DISTRO),bionic)
 	PYTHON_BINARY := /usr/bin/python3
 	PIP_BINARY := /usr/local/bin/pip3
+else ifeq ($(shell test $(REDHAT_DISTRO) -ge 8; echo $$?), 0)
+	PYTHON_BINARY := $(shell which python3)
+	PIP_BINARY := $(shell which pip3)
 else
 	PYTHON_BINARY := python
 	PIP_BINARY := pip
@@ -42,11 +46,13 @@ COMPONENT_PYTHONPATH = $(subst $(space_char),:,$(realpath $(COMPONENTS)))
 .PHONY: play
 play:
 	@echo "DEBIAN=$(DEBIAN)"
-	@echo "REDHAT=$(REDHAT)"
 	@echo "DEB_DISTRO=$(DEB_DISTRO)"
+	@echo "REDHAT=$(REDHAT)"
+	@echo "REDHAT_DISTRO=$(REDHAT_DISTRO)"
 	@echo "PYTHON_BINARY=$(PYTHON_BINARY)"
 	@echo "PIP_BINARY=$(PIP_BINARY)"
 	@echo "PKG_VERSION=$(PKG_VERSION)"
+	@echo "PKG_RELEASE=$(PKG_RELEASE)"
 
 .PHONY: requirements
 requirements: virtualenv
