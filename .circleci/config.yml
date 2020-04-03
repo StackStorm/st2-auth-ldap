@@ -15,7 +15,7 @@ jobs:
     environment:
       DISTROS: trusty xenial bionic el6 el7 el8
       ARTIFACTS: /artifacts
-      docker_distros: trusty xenial bionic centos6 centos7 centos8
+      docker_distros: trusty bionic centos6 centos7 centos8
       docker_run: |-
         docker run -w /code/ldap --volumes-from st2-ldap-vol
           -e PKG_VERSION=$PKG_VERSION
