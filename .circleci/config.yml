@@ -45,6 +45,9 @@ jobs:
             for dist in $docker_distros; do
               docker pull stackstorm/buildpack:$dist
             done
+            echo "<-- BEGIN DOCKER IMAGE LIST -->"
+            docker image list
+            echo "<-- END DOCKER IMAGE LIST -->"
       - run:
           name: Setup circlerc_env
           command: |
@@ -93,7 +96,7 @@ jobs:
             eval ${docker_run} stackstorm/buildpack:centos7 make play rpm
             docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el7
             # 5. Build RHEL 8 packages
-            eval ${docker_run} stackstorm/buildpack:centos8 -c "yum install -y which rpm python3-wheel; make play rpm"
+            eval ${docker_run} stackstorm/buildpack:centos8 make play rpm
             docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el8
       - store_artifacts:
           path: /artifacts
