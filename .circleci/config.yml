@@ -59,6 +59,8 @@ jobs:
             source virtualenv/bin/activate
             PKG_VERSION=$(python setup.py --version 2> /dev/null | sed 's/\.dev[0-9]$/dev/')
             PKG_RELEASE=$(.circle/packagecloud.sh next-revision trusty ${PKG_VERSION} st2-auth-ldap)
+            echo "PKG_VERSION = ${PKG_VERSION}"
+            echo "PKG_RELEASE = ${PKG_RELEASE}"
             echo "export PKG_VERSION=${PKG_VERSION}" >> ~/.circlerc
             echo "export PKG_RELEASE=${PKG_RELEASE}" >> ~/.circlerc
       - run:
