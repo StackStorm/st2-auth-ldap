@@ -1,3 +1,9 @@
+# Copyright (C) 2020 Extreme Networks, Inc - All Rights Reserved
+#
+# Unauthorized copying of this file, via any medium is strictly
+# prohibited. Proprietary and confidential. See the LICENSE file
+# included with this work for details.
+
 SHELL := /bin/bash
 PKG_NAME := st2-auth-ldap
 PKG_RELEASE ?= 1
