@@ -17,9 +17,9 @@ Version:        %{version}
 Epoch: %{epoch}
 %endif
 Release:        %{release}
-License:        Extreme Workflow Composer EULA
-Summary:        LDAP authentication plugin for EWC
-URL:            https://www.extremenetworks.com/product/workflow-composer/
+License:        Apache 2.0
+Summary:        LDAP authentication plugin for StackStorm
+URL:            https://stackstorm.com
 Source0:        st2-enterprise-auth-backend-ldap
 
 Requires: st2 openldap
@@ -28,7 +28,7 @@ Requires: st2 openldap
 %define _rpmdir %(pwd)/build
 
 %description
-  LDAP Authentication Backend for Extreme Workflow Composer
+  LDAP Authentication Backend for StackStorm
 
 %prep
   rm -rf %{buildroot}
