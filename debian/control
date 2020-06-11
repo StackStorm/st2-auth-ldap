@@ -1,14 +1,13 @@
 Source: st2-auth-ldap
 Section: Python
 Priority: optional
-Maintainer: Extreme Networks <support@extremenetworks.com>
+Maintainer: StackStorm Engineering <opsadmin@stackstorm.com>
 Build-Depends: debhelper (>= 8.0.0)
 Standards-Version: 3.9.4
-Homepage: https://www.extremenetworks.com/product/workflow-composer/
+Homepage: http://stackstorm.com/
 
 Package: st2-auth-ldap
 Architecture: amd64
 Pre-Depends: st2
 Depends: ${misc:Depends}, st2, libldap-2.4-2
-Description: LDAP auth backend for EWC
-  LDAP Authentication Backend for Extreme Workflow Composer
+Description: LDAP authentication backend for StackStorm
