@@ -62,12 +62,11 @@ class LDAPAuthenticationBackend(object):
     )
 
     def __init__(self, bind_dn, bind_password, base_ou, group_dns, host, port=389,
-                 scope='subtree', id_attr=None,  use_ssl=False, use_tls=False,
-                 cacert=None, network_timeout=10.0, chase_referrals=False, debug=False,
-                 client_options=None, group_dns_check='and',
-                 cache_user_groups_response=True, cache_user_groups_cache_ttl=120,
-                 cache_user_groups_cache_max_size=100):
-
+                 scope='subtree', id_attr=None, account_pattern='',
+                 use_ssl=False, use_tls=False, cacert=None, network_timeout=10.0,
+                 chase_referrals=False, debug=False, client_options=None,
+                 group_dns_check='and', cache_user_groups_response=True,
+                 cache_user_groups_cache_ttl=120, cache_user_groups_cache_max_size=100):
         if not bind_dn:
             raise ValueError('Bind DN to query the LDAP server is not provided.')
 
@@ -105,7 +104,7 @@ class LDAPAuthenticationBackend(object):
         self._debug = debug
         self._client_options = client_options
 
-        if not id_attr:
+        if not account_pattern and not id_attr:
             LOG.warn('Default to "uid" for the user attribute in the LDAP query.')
 
         if not base_ou:
@@ -115,7 +114,7 @@ class LDAPAuthenticationBackend(object):
             raise ValueError('Scope value for the LDAP query must be one of '
                              '%s.' % str(SEARCH_SCOPES.keys()))
 
-        self._id_attr = id_attr or 'uid'
+        self._account_pattern = account_pattern or '{id_attr}=%s'.format(id_attr=id_attr or 'uid')
         self._base_ou = base_ou
         self._scope = SEARCH_SCOPES[scope]
 
@@ -315,7 +314,7 @@ class LDAPAuthenticationBackend(object):
         :rtype: ``tuple`` (``user_dn``, ``user_info_dict``)
         """
         username = ldap.filter.escape_filter_chars(username)
-        query = '%s=%s' % (self._id_attr, username)
+        query = self._account_pattern % dict(username=username)
         result = connection.search_s(self._base_ou, self._scope, query, [])
 
         if result:
