@@ -62,7 +62,7 @@ class LDAPAuthenticationBackend(object):
     )
 
     def __init__(self, bind_dn, bind_password, base_ou, group_dns, host, port=389,
-                 scope='subtree', id_attr='uid', use_ssl=False, use_tls=False,
+                 scope='subtree', id_attr=None,  use_ssl=False, use_tls=False,
                  cacert=None, network_timeout=10.0, chase_referrals=False, debug=False,
                  client_options=None, group_dns_check='and',
                  cache_user_groups_response=True, cache_user_groups_cache_ttl=120,
