@@ -51,7 +51,7 @@ VALID_GROUP_DNS_CHECK_VALUES = [
 # Note: To avoid injection attacks the final query needs to be assembled ldap.filter.filter_format
 # method and *NOT* by doing simple string formating / concatenation (method ensures filter values
 # are correctly escaped).
-USER_GROUP_MEMBERSHIP_QUERY = '(|(&(objectClass=*)(|(member=%s)(uniqueMember=%s)(memberUid=%s))))'
+USER_GROUP_MEMBERSHIP_QUERY = '(|(&(objectClass=*)(|(member=%(user_dn)s)(uniqueMember=%(user_dn)s)(memberUid=%(username)s))))'
 
 
 class LDAPAuthenticationBackend(object):
@@ -62,7 +62,7 @@ class LDAPAuthenticationBackend(object):
     )
 
     def __init__(self, bind_dn, bind_password, base_ou, group_dns, host, port=389,
-                 scope='subtree', id_attr=None, account_pattern='',
+                 scope='subtree', id_attr=None, account_pattern='', group_pattern='',
                  use_ssl=False, use_tls=False, cacert=None, network_timeout=10.0,
                  chase_referrals=False, debug=False, client_options=None,
                  group_dns_check='and', cache_user_groups_response=True,
@@ -115,6 +115,7 @@ class LDAPAuthenticationBackend(object):
                              '%s.' % str(SEARCH_SCOPES.keys()))
 
         self._account_pattern = account_pattern or '{id_attr}=%s'.format(id_attr=id_attr or 'uid')
+        self._group_pattern = group_pattern or USER_GROUP_MEMBERSHIP_QUERY
         self._base_ou = base_ou
         self._scope = SEARCH_SCOPES[scope]
 
@@ -344,8 +345,11 @@ class LDAPAuthenticationBackend(object):
         if groups is not None:
             return groups
 
-        filter_values = [user_dn, user_dn, username]
-        query = ldap.filter.filter_format(USER_GROUP_MEMBERSHIP_QUERY, filter_values)
+        filter_values = {
+            'user_dn': ldap.filter.escape_filter_chars(user_dn),
+            'username': ldap.filter.escape_filter_chars(username),
+        }
+        query = self._group_pattern % filter_values
         result = connection.search_s(self._base_ou, self._scope, query, [])
 
         if result:
