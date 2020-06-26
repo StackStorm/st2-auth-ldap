@@ -21,7 +21,7 @@ sudo dnf install python2-devel python3-devel openldap-devel
 | bind_dn                    | yes      |                | DN of the service account to bind with the LDAP server                                                                         |
 | bind_password              | yes      |                | Password of the service account                                                                                                |
 | base_ou                    | yes      |                | Base OU to search for user and group entries                                                                                   |
-| group_dns                  | yes      |                | Which groups user must be member of to be granted access                                                                       |
+| group_dns                  | yes      |                | Which groups user must be member of to be granted access (group names are considered case-insensitive)                         |
 | group_dns_check            | no       | `and`          | What kind of check to perform when validating user group membership (`and` / `or`). When `and` behavior is used, user needs to be part of all the specified groups and when `or` behavior is used, user needs to be part of at least one or more of the specified groups. |
 | host                       | yes      |                | Hostname of the LDAP server                                                                                                    |
 | port                       | yes      |                | Port of the LDAP server                                                                                                        |
