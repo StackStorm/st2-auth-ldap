@@ -51,7 +51,7 @@ VALID_GROUP_DNS_CHECK_VALUES = [
 # Note: To avoid injection attacks the final query needs to be assembled ldap.filter.filter_format
 # method and *NOT* by doing simple string formating / concatenation (method ensures filter values
 # are correctly escaped).
-USER_GROUP_MEMBERSHIP_QUERY = '(|(&(objectClass=*)(|(member={user_dn})(uniqueMember={user_dn})(memberUid={username}))))'
+USER_GROUP_MEMBERSHIP_QUERY = '(|(&(objectClass=*)(|(member={user_dn})(uniqueMember={user_dn})(memberUid={username}))))'  # noqa: E501
 
 
 class LDAPAuthenticationBackend(object):
@@ -114,7 +114,7 @@ class LDAPAuthenticationBackend(object):
             raise ValueError('Scope value for the LDAP query must be one of '
                              '%s.' % str(SEARCH_SCOPES.keys()))
 
-        self._account_pattern = account_pattern or '{id_attr}={{username}}'.format(id_attr=id_attr or 'uid')
+        self._account_pattern = account_pattern or '{id_attr}={{username}}'.format(id_attr=id_attr or 'uid')  # noqa: E501
         self._group_pattern = group_pattern or USER_GROUP_MEMBERSHIP_QUERY
         self._base_ou = base_ou
         self._scope = SEARCH_SCOPES[scope]
