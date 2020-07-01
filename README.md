@@ -30,7 +30,7 @@ sudo dnf install python2-devel python3-devel openldap-devel
 | cacert                     | no       | `None`         | Path to the CA cert used to validate certificate                                                                               |
 | id_attr                    | no       | `uid`          | Field name of the user ID attribute; ignored if `account_pattern` is specified.                                                |
 | account_pattern            | no       | `{id_attr}={{username}}` | LDAP subtree pattern to match user. The user's `username` is escaped and interpolated into this string (see example).     |
-| group_pattern              | no       | `(|(&(objectClass=*)(|(member={user_dn})(uniqueMember={user_dn})(memberUid={username}))))` | LDAP subtree pattern for user groups. Both `user_dn` and `username` are escaped and then interpolated into this string (see example).  |
+| group_pattern              | no       | `(\|(&(objectClass=*)(\|(member={user_dn})(uniqueMember={user_dn})(memberUid={username}))))` | LDAP subtree pattern for user groups. Both `user_dn` and `username` are escaped and then interpolated into this string (see example).  |
 | scope                      | no       | `subtree`      | Search scope (base, onelevel, or subtree)                                                                                      |
 | network_timeout            | no       | `10.0`         | Timeout for network operations (in seconds)                                                                                    |
 | chase_referrals            | no       | `false`        | True if the referrals should be automatically chased within the underlying LDAP C lib                                          |
