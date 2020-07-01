@@ -749,6 +749,25 @@ class LDAPBackendTest(unittest2.TestCase):
         mock.MagicMock(return_value=None))
     @mock.patch.object(
         ldap.ldapobject.SimpleLDAPObject, 'search_s',
+        mock.MagicMock(side_effect=[2 * LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    def test_get_user_multiple_results(self):
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR
+        )
+
+        user_info = backend.get_user(username=LDAP_USER_UID)
+        self.assertIsNone(user_info)
+
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'search_s',
         mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
     def test_get_user_groups(self):
         backend = ldap_backend.LDAPAuthenticationBackend(
