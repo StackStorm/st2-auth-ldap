@@ -868,6 +868,104 @@ class LDAPBackendTest(unittest2.TestCase):
         mock.MagicMock(return_value=None))
     @mock.patch.object(
         ldap.ldapobject.SimpleLDAPObject, 'search_s',
+        mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT]))
+    def test_get_user_specifying_account_pattern(self):
+        expected_username = 'unique_username_1'
+        required_group_dns = [
+            'cn=group3,dc=stackstorm,dc=net',
+            'cn=group4,dc=stackstorm,dc=net'
+        ]
+        scope = 'subtree'
+        scope_number = ldap_backend.SEARCH_SCOPES[scope]
+
+        account_pattern = '''
+        (&
+          (objectClass=person)
+          (|
+            (accountName={username})
+            (mail={username})
+          )
+        )
+        '''.replace('\n', '').replace(' ', '')
+        expected_account_pattern = account_pattern.format(username=expected_username)
+
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            required_group_dns,
+            LDAP_HOST,
+            scope=scope,
+            account_pattern=account_pattern,
+        )
+        connection = mock.MagicMock()
+        backend._init_connection = mock.MagicMock(return_value=connection)
+        backend.get_user(expected_username)
+
+        connection.search_s.assert_called_once_with(LDAP_BASE_OU, scope_number,
+                                                    expected_account_pattern, [])
+
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'search_s',
+        mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
+                                    [('cn=group3,dc=stackstorm,dc=net', ())],
+                                    LDAP_USER_SEARCH_RESULT,
+                                    [('cn=group4,dc=stackstorm,dc=net', ())]
+                                    ]))
+    def test_get_user_groups_specifying_group_pattern(self):
+        expected_user_dn = 'unique_userdn_1'
+        expected_username = 'unique_username_2'
+        required_group_dns = [
+            'cn=group3,dc=stackstorm,dc=net',
+            'cn=group4,dc=stackstorm,dc=net'
+        ]
+        scope = 'subtree'
+        scope_number = ldap_backend.SEARCH_SCOPES[scope]
+
+        group_pattern = '''
+        (|
+          (&
+            (objectClass=group)
+            (|
+              (memberUserdn={user_dn})
+              (uniqueMemberUserdn={user_dn})
+              (memberUid={username})
+              (uniqueMemberUid={username})
+            )
+          )
+        )
+        '''.replace('\n', '').replace(' ', '')
+        expected_group_pattern = group_pattern.format(
+            user_dn=expected_user_dn,
+            username=expected_username,
+        )
+
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            required_group_dns,
+            LDAP_HOST,
+            scope=scope,
+            group_pattern=group_pattern,
+            cache_user_groups_response=False,
+        )
+        connection = mock.MagicMock()
+        backend._init_connection = mock.MagicMock(return_value=connection)
+        backend._get_user_dn = mock.MagicMock(return_value=expected_user_dn)
+
+        backend.get_user_groups(expected_username)
+        connection.search_s.assert_called_with(LDAP_BASE_OU, scope_number,
+                                               expected_group_pattern, [])
+
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'search_s',
         mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
                                     [('cn=group3,dc=stackstorm,dc=net', ())],
                                     LDAP_USER_SEARCH_RESULT,
