@@ -114,6 +114,25 @@ class LDAPBackendTest(unittest2.TestCase):
 
     @mock.patch.object(
         ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'search_s',
+        mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    def test_authenticate_without_password(self):
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_HOST,
+            id_attr=LDAP_ID_ATTR
+        )
+
+        with self.assertRaises(ValueError):
+            backend.authenticate(LDAP_USER_UID, '')
+
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
         mock.MagicMock(side_effect=Exception()))
     def test_authenticate_failure_bad_bind_cred(self):
         backend = ldap_backend.LDAPAuthenticationBackend(
