@@ -1,5 +1,7 @@
 # LDAP Authentication Backend for StackStorm Enterprise Edition
 
+[![Build Status](https://travis-ci.org/StackStorm/st2-enterprise-auth-backend-ldap.svg?branch=master)](https://travis-ci.org/StackStorm/st2-enterprise-auth-backend-ldap)
+
 ## Requirements
 
 Ubuntu / Debian
