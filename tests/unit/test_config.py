@@ -163,7 +163,21 @@ class LDAPBackendConfigurationTest(unittest2.TestCase):
             id_attr=None
         )
 
-        self.assertEqual('uid', backend._id_attr)
+        self.assertEqual('uid={username}', backend._account_pattern)
+
+    def test_id_attr_and_account_pattern(self):
+        account_pattern = '(|(username={username})(mail={username}))'
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_HOST,
+            id_attr='user',
+            account_pattern=account_pattern,
+        )
+
+        self.assertEqual(account_pattern, backend._account_pattern)
 
     def test_both_ssl_tls_true(self):
         self.assertRaises(

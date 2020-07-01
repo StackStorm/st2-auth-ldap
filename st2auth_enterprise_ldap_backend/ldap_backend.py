@@ -51,7 +51,7 @@ VALID_GROUP_DNS_CHECK_VALUES = [
 # Note: To avoid injection attacks the final query needs to be assembled ldap.filter.filter_format
 # method and *NOT* by doing simple string formating / concatenation (method ensures filter values
 # are correctly escaped).
-USER_GROUP_MEMBERSHIP_QUERY = '(|(&(objectClass=*)(|(member=%s)(uniqueMember=%s)(memberUid=%s))))'
+USER_GROUP_MEMBERSHIP_QUERY = '(|(&(objectClass=*)(|(member={user_dn})(uniqueMember={user_dn})(memberUid={username}))))'  # noqa: E501
 
 
 class LDAPAuthenticationBackend(object):
@@ -62,12 +62,11 @@ class LDAPAuthenticationBackend(object):
     )
 
     def __init__(self, bind_dn, bind_password, base_ou, group_dns, host, port=389,
-                 scope='subtree', id_attr='uid', use_ssl=False, use_tls=False,
-                 cacert=None, network_timeout=10.0, chase_referrals=False, debug=False,
-                 client_options=None, group_dns_check='and',
-                 cache_user_groups_response=True, cache_user_groups_cache_ttl=120,
-                 cache_user_groups_cache_max_size=100):
-
+                 scope='subtree', id_attr=None, account_pattern='', group_pattern='',
+                 use_ssl=False, use_tls=False, cacert=None, network_timeout=10.0,
+                 chase_referrals=False, debug=False, client_options=None,
+                 group_dns_check='and', cache_user_groups_response=True,
+                 cache_user_groups_cache_ttl=120, cache_user_groups_cache_max_size=100):
         if not bind_dn:
             raise ValueError('Bind DN to query the LDAP server is not provided.')
 
@@ -105,7 +104,7 @@ class LDAPAuthenticationBackend(object):
         self._debug = debug
         self._client_options = client_options
 
-        if not id_attr:
+        if not account_pattern and not id_attr:
             LOG.warn('Default to "uid" for the user attribute in the LDAP query.')
 
         if not base_ou:
@@ -115,7 +114,9 @@ class LDAPAuthenticationBackend(object):
             raise ValueError('Scope value for the LDAP query must be one of '
                              '%s.' % str(SEARCH_SCOPES.keys()))
 
-        self._id_attr = id_attr or 'uid'
+        default_account_pattern = '{id_attr}={{username}}'.format(id_attr=id_attr or 'uid')
+        self._account_pattern = account_pattern or default_account_pattern
+        self._group_pattern = group_pattern or USER_GROUP_MEMBERSHIP_QUERY
         self._base_ou = base_ou
         self._scope = SEARCH_SCOPES[scope]
 
@@ -315,7 +316,7 @@ class LDAPAuthenticationBackend(object):
         :rtype: ``tuple`` (``user_dn``, ``user_info_dict``)
         """
         username = ldap.filter.escape_filter_chars(username)
-        query = '%s=%s' % (self._id_attr, username)
+        query = self._account_pattern.format(username=username)
         result = connection.search_s(self._base_ou, self._scope, query, [])
 
         if result:
@@ -345,8 +346,11 @@ class LDAPAuthenticationBackend(object):
         if groups is not None:
             return groups
 
-        filter_values = [user_dn, user_dn, username]
-        query = ldap.filter.filter_format(USER_GROUP_MEMBERSHIP_QUERY, filter_values)
+        filter_values = {
+            'user_dn': ldap.filter.escape_filter_chars(user_dn),
+            'username': ldap.filter.escape_filter_chars(username),
+        }
+        query = self._group_pattern.format(**filter_values)
         result = connection.search_s(self._base_ou, self._scope, query, [])
 
         if result:
