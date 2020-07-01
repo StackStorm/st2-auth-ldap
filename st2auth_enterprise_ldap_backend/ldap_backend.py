@@ -114,7 +114,8 @@ class LDAPAuthenticationBackend(object):
             raise ValueError('Scope value for the LDAP query must be one of '
                              '%s.' % str(SEARCH_SCOPES.keys()))
 
-        self._account_pattern = account_pattern or '{id_attr}={{username}}'.format(id_attr=id_attr or 'uid')  # noqa: E501
+        default_account_pattern = '{id_attr}={{username}}'.format(id_attr=id_attr or 'uid')
+        self._account_pattern = account_pattern or default_account_pattern
         self._group_pattern = group_pattern or USER_GROUP_MEMBERSHIP_QUERY
         self._base_ou = base_ou
         self._scope = SEARCH_SCOPES[scope]
