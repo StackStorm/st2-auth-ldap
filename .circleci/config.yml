@@ -13,9 +13,9 @@ jobs:
   build:
     <<: *defaults
     environment:
-      DISTROS: trusty xenial bionic el6 el7 el8
+      DISTROS: trusty xenial bionic el7 el8
       ARTIFACTS: /artifacts
-      docker_distros: trusty bionic centos6 centos7 centos8
+      docker_distros: trusty bionic centos7 centos8
       docker_run: |-
         docker run -w /code/ldap --volumes-from st2-ldap-vol
           -e PKG_VERSION=$PKG_VERSION
@@ -91,13 +91,10 @@ jobs:
             eval ${docker_run} stackstorm/buildpack:bionic make play deb
             docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/bionic
             docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/bionic
-            # 3. Build RHEL 6 packages
-            eval ${docker_run} stackstorm/buildpack:centos6 make play rpm
-            docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el6
-            # 4. Build RHEL 7 packages
+            # 3. Build RHEL 7 packages
             eval ${docker_run} stackstorm/buildpack:centos7 make play rpm
             docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el7
-            # 5. Build RHEL 8 packages
+            # 4. Build RHEL 8 packages
             eval ${docker_run} stackstorm/buildpack:centos8 make play rpm
             docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el8
       - store_artifacts:
@@ -108,14 +105,13 @@ jobs:
             - trusty
             - xenial
             - bionic
-            - el6
             - el7
             - el8
   deploy:
     <<: *defaults
     environment:
       ARTIFACTS: /artifacts
-      DISTROS: trusty xenial bionic el6 el7 el8
+      DISTROS: trusty xenial bionic el7 el8
     steps:
       - checkout
       - attach_workspace:
