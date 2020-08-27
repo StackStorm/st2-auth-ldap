@@ -20,7 +20,7 @@ import ldap
 import mock
 import unittest2
 
-from st2auth_enterprise_ldap_backend import ldap_backend
+from st2auth_ldap import ldap_backend
 
 
 LDAP_HOST = '127.0.0.1'

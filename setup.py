@@ -27,7 +27,7 @@ check_pip_version()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 REQUIREMENTS_FILE = os.path.join(BASE_DIR, 'requirements.txt')
-INIT_FILE = os.path.join(BASE_DIR, 'st2auth_enterprise_ldap_backend', '__init__.py')
+INIT_FILE = os.path.join(BASE_DIR, 'st2auth_ldap', '__init__.py')
 
 version = parse_version_string(INIT_FILE)
 install_reqs, dep_links = fetch_requirements(REQUIREMENTS_FILE)
@@ -52,7 +52,7 @@ setup(
     ],
     platforms=['Any'],
     scripts=[],
-    provides=['st2auth_enterprise_ldap_backend'],
+    provides=['st2auth_ldap'],
     packages=find_packages(),
     include_package_data=True,
     install_requires=install_reqs,
@@ -60,7 +60,7 @@ setup(
     test_suite='tests',
     entry_points={
         'st2auth.backends.backend': [
-            'ldap = st2auth_enterprise_ldap_backend.ldap_backend:LDAPAuthenticationBackend',
+            'ldap = st2auth_ldap.ldap_backend:LDAPAuthenticationBackend',
         ],
     },
     zip_safe=False

@@ -135,8 +135,8 @@ lint: requirements .clone_st2_repo .lint
 
 .PHONY: .lint
 .lint:
-	. $(VIRTUALENV_DIR)/bin/activate; flake8 --config ./lint-configs/python/.flake8-proprietary st2auth_enterprise_ldap_backend/
-	. $(VIRTUALENV_DIR)/bin/activate; pylint -E --rcfile=./lint-configs/python/.pylintrc st2auth_enterprise_ldap_backend/
+	. $(VIRTUALENV_DIR)/bin/activate; flake8 --config ./lint-configs/python/.flake8 st2auth_ldap/
+	. $(VIRTUALENV_DIR)/bin/activate; pylint -E --rcfile=./lint-configs/python/.pylintrc st2auth_ldap/
 
 .PHONY: unit-tests
 unit-tests: requirements .clone_st2_repo .unit-tests
