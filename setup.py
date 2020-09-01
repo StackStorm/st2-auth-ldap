@@ -25,7 +25,7 @@ from dist_utils import parse_version_string
 # version.Version = version.LegacyVersion
 
 check_pip_version()
-fetch_requirements()
+update_pip_version
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 REQUIREMENTS_FILE = os.path.join(BASE_DIR, 'requirements.txt')
