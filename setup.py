@@ -16,7 +16,6 @@ import os
 
 from setuptools import setup, find_packages
 from dist_utils import check_pip_version
-from dist_utils import update_pip_version
 from dist_utils import fetch_requirements
 from dist_utils import parse_version_string
 # Monkey patch to avoid version normalization like '2.9dev' -> '2.9.dev0', (https://github.com/pypa/setuptools/issues/308)
@@ -25,7 +24,6 @@ from dist_utils import parse_version_string
 # version.Version = version.LegacyVersion
 
 check_pip_version()
-update_pip_version
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 REQUIREMENTS_FILE = os.path.join(BASE_DIR, 'requirements.txt')
