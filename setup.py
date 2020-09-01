@@ -30,7 +30,8 @@ REQUIREMENTS_FILE = os.path.join(BASE_DIR, 'requirements.txt')
 INIT_FILE = os.path.join(BASE_DIR, 'st2auth_ldap', '__init__.py')
 
 version = parse_version_string(INIT_FILE)
-install_reqs, dep_links = fetch_requirements(REQUIREMENTS_FILE)
+#nstall_reqs, dep_links = fetch_requirements(REQUIREMENTS_FILE)
+install_requirements, dep_links = fetch_requirements(REQUIREMENTS_FILE)
 
 setup(
     name='st2-auth-backend-ldap',
