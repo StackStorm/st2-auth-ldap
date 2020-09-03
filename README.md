@@ -3,6 +3,7 @@
 ## Requirements
 
 Ubuntu / Debian
+Ubuntu 18.0.4
 
 ```bash
 sudo apt-get install -y python-dev libldap2-dev libsasl2-dev libssl-dev ldap-utils
