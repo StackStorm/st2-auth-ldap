@@ -1,4 +1,4 @@
-# LDAP Authentication Backend for StackStorm Enterprise Edition
+# LDAP Authentication Backend for StackStorm
 
 ## Requirements
 
