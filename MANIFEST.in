@@ -1,3 +1,4 @@
 include dist_utils.py
 include requirements.txt
+include test-requirements.txt
 include LICENSE
