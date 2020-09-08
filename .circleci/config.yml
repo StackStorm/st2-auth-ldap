@@ -119,6 +119,9 @@ jobs:
           name: List workspace files
           command: find $ARTIFACTS | sed 's|[^/]*/|  |g'
       - run:
+          name: Install packagecloud CLI
+          command: gem install package_cloud
+      - run:
           name: Install dependencies
           command: |
             set -x
