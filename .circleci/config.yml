@@ -33,13 +33,13 @@ jobs:
             apt-get install -y jq rpm
             apt-get install -y python-pip python-virtualenv python-dev
             apt-get install -y software-properties-common libsasl2-dev libldap2-dev apt-transport-https
+            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
             apt-get -qq update
-            apt-get update
             apt-get install -y docker-ce
             apt-get -qq update 
-            apt-get install -o Dpkg::Options::="--force-confold" --force-yes -y docker-ce 
-            apt-get -q update
-            gem install package_cloud
+            # apt-get install -o Dpkg::Options::="--force-confold" --force-yes -y docker-ce 
+            #apt-get -q update
+            #gem install package_cloud
             make .clone_st2_repo
             make requirements
             mkdir ${ARTIFACTS} && cd ${ARTIFACTS} && mkdir ${DISTROS}
