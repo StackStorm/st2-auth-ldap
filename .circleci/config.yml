@@ -128,6 +128,7 @@ jobs:
             set -x
             apt-get -qq update
             apt-get -y install jq
+            set PACKAGECLOUD_TOKEN test-sagar 
             wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
             chmod 755 .circle/packagecloud.sh
             gem install package_cloud
