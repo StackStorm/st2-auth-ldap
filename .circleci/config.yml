@@ -27,9 +27,9 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apt-get update 
-            apt-get install docker-ce
             curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+            apt-get update
+            apt-get install docker-ce
             apt-get -qq update
             apt-get install -y jq rpm
             apt-get install -y python-pip python-virtualenv python-dev
