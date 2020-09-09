@@ -34,7 +34,7 @@ jobs:
             apt-get install -y software-properties-common libsasl2-dev libldap2-dev apt-transport-https
             apt-get -qq update
             apt-get update
-            apt-get install -y docker-engine
+            apt-get install -y docker-ce
             gem install package_cloud
             make .clone_st2_repo
             make requirements
