@@ -15,3 +15,10 @@ script:
   - flake8 --config ./lint-configs/python/.flake8 st2auth_ldap/
   - pylint -E --rcfile=./lint-configs/python/.pylintrc st2auth_ldap/
   - nosetests -sv --with-coverage --cover-package=st2auth_ldap tests/unit
+
+deploy:
+  provider: packagecloud
+  username: <username>
+  token: <encrypted token>
+  repository: <repository>
+  edge: true # opt in to dpl v2
