@@ -122,6 +122,9 @@ jobs:
           name: Install packagecloud CLI
           command: gem install package_cloud
       - run:
+          name: Authenticate with registry
+          command: echo "//packagecloud.io/example-user/example-repo/npm/:_authToken=$PACKAGECLOUD_TOKEN" > ~/repo/.npmrc
+      - run:
           name: Install dependencies
           command: |
             set -x
