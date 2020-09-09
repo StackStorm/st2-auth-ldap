@@ -28,7 +28,7 @@ jobs:
           name: Install dependencies
           command: |
             curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu/dists/xenial/stable/"
+            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu/dists/xenial/stable/"
             apt update -y
             apt-cache search docker-ce -y
             apt-get -qq update
