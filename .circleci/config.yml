@@ -33,7 +33,7 @@ jobs:
             apt-get install -y jq rpm
             apt-get install -y python-pip python-virtualenv python-dev
             apt-get install -y software-properties-common libsasl2-dev libldap2-dev apt-transport-https
-            apt-get -q update
+            apt-get -qq update
             apt-get update
             apt-get install -y docker-ce
             apt-get -qq update 
