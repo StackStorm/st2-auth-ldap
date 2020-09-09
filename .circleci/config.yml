@@ -28,13 +28,17 @@ jobs:
           name: Install dependencies
           command: |
             curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+            #curl -fsSL https://apt.dockerproject.org/linix/debian/gpg | apt-key add -
             apt-get -qq update
             apt-get install -y jq rpm
             apt-get install -y python-pip python-virtualenv python-dev
             apt-get install -y software-properties-common libsasl2-dev libldap2-dev apt-transport-https
-            apt-get -qq update
+            apt-get -q update
             apt-get update
             apt-get install -y docker-ce
+            apt-get -qq update 
+            apt-get install -o Dpkg::Options::="--force-confold" --force-yes -y docker-ce 
+            apt-get -q update
             gem install package_cloud
             make .clone_st2_repo
             make requirements
