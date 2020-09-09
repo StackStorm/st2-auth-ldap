@@ -8,7 +8,7 @@ defaults: &defaults
   docker:
     - image: ruby:2.4.4
 
-version: 2
+version: 2.1
 jobs:
   build:
     <<: *defaults
@@ -121,9 +121,6 @@ jobs:
       - run:
           name: Install packagecloud CLI
           command: gem install package_cloud
-      - run:
-          name: Authenticate with registry
-          command: echo "//packagecloud.io/example-user/example-repo/npm/:_authToken=$PACKAGECLOUD_TOKEN" > ~/repo/.npmrc
       - run:
           name: Install dependencies
           command: |
