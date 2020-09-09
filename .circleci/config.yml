@@ -28,14 +28,12 @@ jobs:
           name: Install dependencies
           command: |
             curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu/dists/xenial/stable/"
-            apt update -y
-            apt-cache search docker-ce -y
             apt-get -qq update
             apt-get install -y jq rpm
             apt-get install -y python-pip python-virtualenv python-dev
             apt-get install -y software-properties-common libsasl2-dev libldap2-dev apt-transport-https
             apt-get -qq update
+            apt-cache search docker-ce
             apt-get install -y docker-ce
             gem install package_cloud
             make .clone_st2_repo
