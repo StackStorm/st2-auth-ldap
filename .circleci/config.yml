@@ -6,17 +6,77 @@
 defaults: &defaults
   #working_directory: ~/ldap
   working_directory: ~/st2-auth-ldap
-  docker:
-    - image: ruby:2.4.4
+    #docker:
+    #- image: ruby:2.4.4
 
 version: 2
 jobs:
-  build:
+  # build:
+      build_and_test_python27:
+    docker:
+      - image: circleci/python:2.7
+      - image: rabbitmq:3
+      - image: mongo:3.4
+
+    steps:
+      - checkout
+      - run:
+          name: Clone StackStorm/st2 repo
+          command: |
+            make .clone_st2_repo
+      - restore_cache:
+          key: v1-dependency-cache-py27-{{ checksum "/tmp/st2/requirements.txt" }}
+      - run:
+          name: Download and install dependencies
+          command: |
+            sudo apt-get -y install xmlsec1
+            make requirements
+      - run:
+          name: Run lint and tests (Python 2.7)
+          command: |
+            make .lint
+            make .unit-tests
+      - save_cache:
+          key: v1-dependency-cache-py27-{{ checksum "/tmp/st2/requirements.txt" }}
+          paths:
+            - ~/.cache/pip
+            - ~/.apt-cache
+  build_and_test_python36:
+    docker:
+      - image: circleci/python:3.6
+      - image: rabbitmq:3
+      - image: mongo:3.4
+
+    steps:
+      - checkout
+      - run:
+          name: Clone StackStorm/st2 repo
+          command: |
+            make .clone_st2_repo
+      - restore_cache:
+          key: v1-dependency-cache-py36-{{ checksum "/tmp/st2/requirements.txt" }}
+      - run:
+          name: Download and install dependencies
+          command: |
+            sudo apt-get -y install xmlsec1
+            make requirements
+      - run:
+          name: Run lint and tests (Python 3.6)
+          command: |
+            make .lint
+            make .unit-tests
+      - save_cache:
+          key: v1-dependency-cache-py36-{{ checksum "/tmp/st2/requirements.txt" }}
+          paths:
+            - ~/.cache/pip
+            - ~/.apt-cache
+  build_packages:
+
     <<: *defaults
     environment:
       DISTROS: xenial bionic el7 el8
       ARTIFACTS: /artifacts
-      docker_distros: xenial  bionic centos7 centos8
+      docker_distros: xenial bionic centos7 centos8
       docker_run: |-
         docker run -w /code/ldap --volumes-from st2-ldap-vol
           -e PKG_VERSION=$PKG_VERSION
