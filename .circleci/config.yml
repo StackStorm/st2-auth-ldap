@@ -57,8 +57,9 @@ jobs:
           name: Setup ~/.circlerc environment variables
           command: |
             set -e
-            .circle/circlerc.sh
-            source ~/.circlerc
+            mkdir .circle
+            #.circle/circlerc.sh
+            #source ~/.circlerc
             wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
             chmod 755 .circle/packagecloud.sh
             PKG_VERSION=$(python setup.py --version 2> /dev/null | sed 's/\.dev[0-9]$/dev/')
