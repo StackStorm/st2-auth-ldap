@@ -58,6 +58,7 @@ jobs:
           name: Setup ~/.circlerc environment variables
           command: |
             set -e
+            rm -rf .circle
             mkdir .circle
             #.circle/circlerc.sh
             #source ~/.circlerc
