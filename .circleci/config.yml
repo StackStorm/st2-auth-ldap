@@ -4,7 +4,8 @@
 # PACKAGECLOUD_ORGANIZATION (default: stackstorm)
 # PACKAGECLOUD_TOKEN
 defaults: &defaults
-  working_directory: ~/ldap
+  #working_directory: ~/ldap
+  working_directory: ~/st2-auth-ldap
   docker:
     - image: ruby:2.4.4
 
@@ -133,7 +134,6 @@ jobs:
             set -x
             apt-get -qq update
             apt-get -y install jq
-            set PACKAGECLOUD_TOKEN test-sagar 
             wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
             chmod 755 .circle/packagecloud.sh
             gem install package_cloud
