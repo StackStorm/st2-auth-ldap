@@ -98,6 +98,7 @@ jobs:
           name: Setup ~/.circlerc environment variables
           command: |
             set -e
+            rm -rf .circle
             mkdir .circle
             wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
             chmod 755 .circle/packagecloud.sh
