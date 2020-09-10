@@ -53,7 +53,8 @@ jobs:
             docker image list
             echo "<-- END DOCKER IMAGE LIST -->"
       - run:
-          name: Setup circlerc_env
+        # name: Setup circlerc_env
+          name: Setup ~/.circlerc environment variables
           command: |
             set -e
             .circle/circlerc.sh
@@ -66,6 +67,9 @@ jobs:
             echo "PKG_RELEASE = ${PKG_RELEASE}"
             echo "export PKG_VERSION=${PKG_VERSION}" >> ~/.circlerc
             echo "export PKG_RELEASE=${PKG_RELEASE}" >> ~/.circlerc
+            # Create directories
+            mkdir -p ~/st2-auth-ldap/build/
+            cd  ~/st2-auth-auth/build/ && mkdir ${DISTROS}
       - run:
           name: Make lint and unit tests
           command: |
