@@ -88,7 +88,8 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            sudo apt-get update
+            #sudo apt-get update
+            sudo apt-get install -y openldap-devel
             sudo apt-get install -y libsasl2-dev python-dev libldap2-dev libssl-dev
             sudo apt-get install -y jq rpm
       - setup_remote_docker
