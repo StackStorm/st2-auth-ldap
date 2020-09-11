@@ -4,14 +4,10 @@
 # PACKAGECLOUD_ORGANIZATION (default: stackstorm)
 # PACKAGECLOUD_TOKEN
 defaults: &defaults
-  #working_directory: ~/ldap
   working_directory: ~/st2-auth-ldap
-    #docker:
-    #- image: ruby:2.4.4
 
 version: 2
 jobs:
-  #build:
   build_and_test_python27:
     docker:
       - image: circleci/python:2.7
@@ -71,149 +67,125 @@ jobs:
             - ~/.cache/pip
             - ~/.apt-cache
   build_packages:
-
     <<: *defaults
+    docker:
+      - image: circleci/python:2.7
     environment:
       DISTROS: xenial bionic el7 el8
-      ARTIFACTS: /artifacts
-      docker_distros: xenial bionic centos7 centos8
-      docker_run: |-
-        docker run -w /code/ldap --volumes-from st2-ldap-vol
-          -e PKG_VERSION=$PKG_VERSION
-          -e PKG_RELEASE=$PKG_RELEASE
+      DOCKER_DISTROS: xenial bionic centos7 centos8
+      DOCKER_RUN: |-
+        docker run -w /code/st2-auth-ldap --volumes-from st2-auth-ldap-vol
+            -e PKG_VERSION=$PKG_VERSION
+            -e PKG_RELEASE=$PKG_RELEASE
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - run:
           name: Install dependencies
           command: |
-            curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-            #curl -fsSL https://apt.dockerproject.org/linix/debian/gpg | apt-key add -
-            apt-get -qq update
-            apt-get install -y jq rpm
-            apt-get install -y python-pip python-virtualenv python-dev
-            apt-get install -y software-properties-common libsasl2-dev libldap2-dev apt-transport-https
-            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
-            apt-get -qq update
-            apt-get install -y docker-ce
-            apt-get -qq update
-            #changes 
-            # apt-get install -o Dpkg::Options::="--force-confold" --force-yes -y docker-ce 
-            #apt-get -q update
-            #gem install package_cloud
-            make .clone_st2_repo
-            make requirements
-            mkdir ${ARTIFACTS} && cd ${ARTIFACTS} && mkdir ${DISTROS}
+            sudo apt-get update
+            sudo apt-get install -y jq rpm
+      - setup_remote_docker
       - run:
           name: Pull buildpacks
           command: |
-            for dist in $docker_distros; do
+            for dist in $DOCKER_DISTROS; do
               docker pull stackstorm/buildpack:$dist
             done
             echo "<-- BEGIN DOCKER IMAGE LIST -->"
             docker image list
             echo "<-- END DOCKER IMAGE LIST -->"
       - run:
-        # name: Setup circlerc_env
           name: Setup ~/.circlerc environment variables
           command: |
             set -e
             rm -rf .circle
             mkdir .circle
-            #.circle/circlerc.sh
-            #source ~/.circlerc
             wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
             chmod 755 .circle/packagecloud.sh
             PKG_VERSION=$(python setup.py --version 2> /dev/null | sed 's/\.dev[0-9]$/dev/')
             PKG_RELEASE=$(.circle/packagecloud.sh next-revision xenial ${PKG_VERSION} st2-auth-ldap)
-            echo "PKG_VERSION = ${PKG_VERSION}"
-            echo "PKG_RELEASE = ${PKG_RELEASE}"
             echo "export PKG_VERSION=${PKG_VERSION}" >> ~/.circlerc
             echo "export PKG_RELEASE=${PKG_RELEASE}" >> ~/.circlerc
             # Create directories
             mkdir -p ~/st2-auth-ldap/build/
-            cd  ~/st2-auth-auth/build/ && mkdir ${DISTROS}
-      - run:
-          name: Make lint and unit tests
-          command: |
-            source virtualenv/bin/activate
-            make .lint
-            make .unit-tests
+            cd  ~/st2-auth-ldap/build/ && mkdir ${DISTROS}
       - run:
           # Workaround for CircleCI docker-compose limitation where volumes don't work
           # See detailed explanation: https://circleci.com/docs/2.0/building-docker-images/#mounting-folders
-          name: Copy st2-packages files to build containers
+          name: Copy packages files to build containers
           command: |
             # creating dummy container which will hold a volume with data files
-            docker create -v /code --name st2-ldap-vol alpine:3.4 /bin/true
+            docker create -v /code --name st2-auth-ldap-vol alpine:3.4 /bin/true
             # copy st2-packages data files into this volume
-            docker cp ~/ldap st2-ldap-vol:/code
+            docker cp ~/st2-auth-ldap st2-auth-ldap-vol:/code
       - run:
           name: Build packages for supported distros on native OS inside stackstorm/buildpack container
           command: |
             source ~/.circlerc
-            # 1. Build Trusty and Xenial packages
+            # 1. Build Xenial packages
             # NOTE: We can re-use the same packages because both distros use same Python 2.7 version
-            eval ${docker_run} stackstorm/buildpack: xenial make play deb
-            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/xenial
-            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/xenial
-            cp $ARTIFACTS/* $ARTIFACTS/xenial
+            eval ${DOCKER_RUN} stackstorm/buildpack:xenial make play deb
+            docker cp st2-auth-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb ~/st2-auth-ldap/build/xenial
+            docker cp st2-auth-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes ~/st2-auth-ldap/build/xenial
             # 2. Build Bionic packages
-            eval ${docker_run} stackstorm/buildpack:bionic make play deb
-            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/bionic
-            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/bionic
+            eval ${DOCKER_RUN} stackstorm/buildpack:bionic make play deb
+            docker cp st2-auth-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb ~/st2-auth-ldap/build/bionic
+            docker cp st2-auth-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes ~/st2-auth-ldap/build/bionic
             # 3. Build RHEL 7 packages
-            eval ${docker_run} stackstorm/buildpack:centos7 make play rpm
-            docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el7
+            eval ${DOCKER_RUN} stackstorm/buildpack:centos7 make play rpm
+            docker cp st2-auth-ldap-vol:/code/st2-auth-ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm ~/st2-auth-ldap/build/el7
             # 4. Build RHEL 8 packages
-            eval ${docker_run} stackstorm/buildpack:centos8 make play rpm
-            docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el8
+            eval ${DOCKER_RUN} stackstorm/buildpack:centos8 make play rpm
+            docker cp st2-auth-ldap-vol:/code/st2-auth-ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm ~/st2-auth-ldap/build/el8
+            # List poduced artifacts
+            ls -la ~/st2-auth-ldap/build/*/*
       - store_artifacts:
-          path: /artifacts
+          path: ~/st2-auth-ldap/build
+          destination: packages
       - persist_to_workspace:
-          root: /artifacts
+          root: ~/st2-auth-ldap
           paths:
-            - xenial
-            - bionic
-            - el7
-            - el8
-  deploy:
+            - .circle/packagecloud.sh
+            - build
+  deploy_packages:
     <<: *defaults
+    docker:
+      - image: circleci/ruby:2.4
+    working_directory: /tmp/deploy
     environment:
-      ARTIFACTS: /artifacts
       DISTROS: xenial bionic el7 el8
     steps:
       - checkout
       - attach_workspace:
-          at: /artifacts
+          at: .
       - run:
           name: List workspace files
-          command: find $ARTIFACTS | sed 's|[^/]*/|  |g'
+          command: find . | sed 's|[^/]*/|  |g'
       - run:
           name: Install dependencies
           command: |
             set -x
-            apt-get -qq update
-            apt-get -y install jq
-            wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
-            chmod 755 .circle/packagecloud.sh
+            sudo apt-get -y install jq
             gem install package_cloud
       - run:
           name: Deploy to packagecloud
           command: |
             for distro in ${DISTROS}; do
-              .circle/packagecloud.sh deploy $distro $ARTIFACTS/$distro
+              .circle/packagecloud.sh deploy ${distro} build/${distro}
             done
-
 workflows:
   version: 2
+  # Workflow which runs on each push
   build_test_deploy_on_push:
     jobs:
-      - build
-      - deploy:
+      - build_and_test_python27
+      - build_and_test_python36
+      - build_packages
+      - deploy_packages:
           requires:
-            - build
+            - build_and_test_python27
+            - build_and_test_python36
+            - build_packages
           filters:
             branches:
               only:
@@ -222,7 +194,8 @@ workflows:
                 - feature/circleci
   build_test_nightly:
     jobs:
-        - build
+        - build_and_test_python27
+        - build_and_test_python36
     triggers:
       # Run nightly build for the pack
       - schedule:
