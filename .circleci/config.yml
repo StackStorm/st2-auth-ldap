@@ -97,7 +97,8 @@ jobs:
             add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
             apt-get -qq update
             apt-get install -y docker-ce
-            apt-get -qq update 
+            apt-get -qq update
+            #changes 
             # apt-get install -o Dpkg::Options::="--force-confold" --force-yes -y docker-ce 
             #apt-get -q update
             #gem install package_cloud
