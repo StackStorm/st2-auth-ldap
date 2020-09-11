@@ -27,6 +27,9 @@ jobs:
           command: |
             sudo apt-get -y install xmlsec1
             make requirements
+            sudo apt-get install -y lsb-release
+            sudo apt-get install -y rpm
+            sudo rpm rpm-build -q
       - run:
           name: Run lint and tests (Python 2.7)
           command: |
@@ -56,6 +59,9 @@ jobs:
           command: |
             sudo apt-get -y install xmlsec1
             make requirements
+            sudo apt-get install -y lsb-release
+            sudo apt-get install -y rpm
+            sudo rpm rpm-build -q
       - run:
           name: Run lint and tests (Python 3.6)
           command: |
@@ -84,7 +90,7 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install -y jq rpm
-            sudo apt-get install -y lsb_release
+            sudo apt-get install -y lsb-release
             sudo apt-get install -y rpm
             sudo rpm rpm-build -q
       - setup_remote_docker
