@@ -84,6 +84,9 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install -y jq rpm
+            sudo apt-get install -y lsb_release
+            sudo apt-get install -y rpm
+            sudo rpm rpm-build -q
       - setup_remote_docker
       - run:
           name: Pull buildpacks
