@@ -4,18 +4,79 @@
 # PACKAGECLOUD_ORGANIZATION (default: stackstorm)
 # PACKAGECLOUD_TOKEN
 defaults: &defaults
-  working_directory: ~/ldap
-  docker:
-    - image: ruby:2.4.4
+  #working_directory: ~/ldap
+  working_directory: ~/st2-auth-ldap
+    #docker:
+    #- image: ruby:2.4.4
 
 version: 2
 jobs:
-  build:
+  #build:
+  build_and_test_python27:
+    docker:
+      - image: circleci/python:2.7
+      - image: rabbitmq:3
+      - image: mongo:3.4
+
+    steps:
+      - checkout
+      - run:
+          name: Clone StackStorm/st2 repo
+          command: |
+            make .clone_st2_repo
+      - restore_cache:
+          key: v1-dependency-cache-py27-{{ checksum "/tmp/st2/requirements.txt" }}
+      - run:
+          name: Download and install dependencies
+          command: |
+            sudo apt-get -y install xmlsec1
+            make requirements
+      - run:
+          name: Run lint and tests (Python 2.7)
+          command: |
+            make .lint
+            make .unit-tests
+      - save_cache:
+          key: v1-dependency-cache-py27-{{ checksum "/tmp/st2/requirements.txt" }}
+          paths:
+            - ~/.cache/pip
+            - ~/.apt-cache
+  build_and_test_python36:
+    docker:
+      - image: circleci/python:3.6
+      - image: rabbitmq:3
+      - image: mongo:3.4
+
+    steps:
+      - checkout
+      - run:
+          name: Clone StackStorm/st2 repo
+          command: |
+            make .clone_st2_repo
+      - restore_cache:
+          key: v1-dependency-cache-py36-{{ checksum "/tmp/st2/requirements.txt" }}
+      - run:
+          name: Download and install dependencies
+          command: |
+            sudo apt-get -y install xmlsec1
+            make requirements
+      - run:
+          name: Run lint and tests (Python 3.6)
+          command: |
+            make .lint
+            make .unit-tests
+      - save_cache:
+          key: v1-dependency-cache-py36-{{ checksum "/tmp/st2/requirements.txt" }}
+          paths:
+            - ~/.cache/pip
+            - ~/.apt-cache
+  build_packages:
+
     <<: *defaults
     environment:
-      DISTROS: trusty xenial bionic el7 el8
+      DISTROS: xenial bionic el7 el8
       ARTIFACTS: /artifacts
-      docker_distros: trusty bionic centos7 centos8
+      docker_distros: xenial bionic centos7 centos8
       docker_run: |-
         docker run -w /code/ldap --volumes-from st2-ldap-vol
           -e PKG_VERSION=$PKG_VERSION
@@ -28,6 +89,7 @@ jobs:
           name: Install dependencies
           command: |
             curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+            #curl -fsSL https://apt.dockerproject.org/linix/debian/gpg | apt-key add -
             apt-get -qq update
             apt-get install -y jq rpm
             apt-get install -y python-pip python-virtualenv python-dev
@@ -35,7 +97,10 @@ jobs:
             add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
             apt-get -qq update
             apt-get install -y docker-ce
-            gem install package_cloud
+            apt-get -qq update 
+            # apt-get install -o Dpkg::Options::="--force-confold" --force-yes -y docker-ce 
+            #apt-get -q update
+            #gem install package_cloud
             make .clone_st2_repo
             make requirements
             mkdir ${ARTIFACTS} && cd ${ARTIFACTS} && mkdir ${DISTROS}
@@ -49,19 +114,25 @@ jobs:
             docker image list
             echo "<-- END DOCKER IMAGE LIST -->"
       - run:
-          name: Setup circlerc_env
+        # name: Setup circlerc_env
+          name: Setup ~/.circlerc environment variables
           command: |
             set -e
-            .circle/circlerc.sh
-            source ~/.circlerc
+            rm -rf .circle
+            mkdir .circle
+            #.circle/circlerc.sh
+            #source ~/.circlerc
             wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
             chmod 755 .circle/packagecloud.sh
             PKG_VERSION=$(python setup.py --version 2> /dev/null | sed 's/\.dev[0-9]$/dev/')
-            PKG_RELEASE=$(.circle/packagecloud.sh next-revision trusty ${PKG_VERSION} st2-auth-ldap)
+            PKG_RELEASE=$(.circle/packagecloud.sh next-revision xenial ${PKG_VERSION} st2-auth-ldap)
             echo "PKG_VERSION = ${PKG_VERSION}"
             echo "PKG_RELEASE = ${PKG_RELEASE}"
             echo "export PKG_VERSION=${PKG_VERSION}" >> ~/.circlerc
             echo "export PKG_RELEASE=${PKG_RELEASE}" >> ~/.circlerc
+            # Create directories
+            mkdir -p ~/st2-auth-ldap/build/
+            cd  ~/st2-auth-auth/build/ && mkdir ${DISTROS}
       - run:
           name: Make lint and unit tests
           command: |
@@ -83,10 +154,10 @@ jobs:
             source ~/.circlerc
             # 1. Build Trusty and Xenial packages
             # NOTE: We can re-use the same packages because both distros use same Python 2.7 version
-            eval ${docker_run} stackstorm/buildpack:trusty make play deb
-            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/trusty
-            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/trusty
-            cp $ARTIFACTS/trusty/* $ARTIFACTS/xenial
+            eval ${docker_run} stackstorm/buildpack: xenial make play deb
+            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/xenial
+            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/xenial
+            cp $ARTIFACTS/* $ARTIFACTS/xenial
             # 2. Build Bionic packages
             eval ${docker_run} stackstorm/buildpack:bionic make play deb
             docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/bionic
@@ -102,7 +173,6 @@ jobs:
       - persist_to_workspace:
           root: /artifacts
           paths:
-            - trusty
             - xenial
             - bionic
             - el7
@@ -111,7 +181,7 @@ jobs:
     <<: *defaults
     environment:
       ARTIFACTS: /artifacts
-      DISTROS: trusty xenial bionic el7 el8
+      DISTROS: xenial bionic el7 el8
     steps:
       - checkout
       - attach_workspace:
