@@ -27,13 +27,13 @@ check_pip_version()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 REQUIREMENTS_FILE = os.path.join(BASE_DIR, 'requirements.txt')
-INIT_FILE = os.path.join(BASE_DIR, 'st2auth_enterprise_ldap_backend', '__init__.py')
+INIT_FILE = os.path.join(BASE_DIR, 'st2auth_ldap', '__init__.py')
 
 version = parse_version_string(INIT_FILE)
 install_reqs, dep_links = fetch_requirements(REQUIREMENTS_FILE)
 
 setup(
-    name='st2-enterprise-auth-backend-ldap',
+    name='st2-auth-backend-ldap',
     version=version,
     description='StackStorm authentication backend for LDAP.',
     author='StackStorm, Inc.',
@@ -42,17 +42,20 @@ setup(
     license='Apache License (2.0)',
     download_url='https://stackstorm.com/',
     classifiers=[
-        'License :: Other/Proprietary License'
+        'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         'Environment :: Console',
     ],
     platforms=['Any'],
     scripts=[],
-    provides=['st2auth_enterprise_ldap_backend'],
+    provides=['st2auth_ldap'],
     packages=find_packages(),
     include_package_data=True,
     install_requires=install_reqs,
@@ -60,7 +63,7 @@ setup(
     test_suite='tests',
     entry_points={
         'st2auth.backends.backend': [
-            'ldap = st2auth_enterprise_ldap_backend.ldap_backend:LDAPAuthenticationBackend',
+            'ldap = st2auth_ldap.ldap_backend:LDAPAuthenticationBackend',
         ],
     },
     zip_safe=False
