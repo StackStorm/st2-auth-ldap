@@ -13,9 +13,9 @@ jobs:
   build:
     <<: *defaults
     environment:
-      DISTROS: trusty xenial bionic el7 el8
+      DISTROS: xenial bionic el7 el8
       ARTIFACTS: /artifacts
-      docker_distros: trusty bionic centos7 centos8
+      docker_distros: xenial bionic centos7 centos8
       docker_run: |-
         docker run -w /code/ldap --volumes-from st2-ldap-vol
           -e PKG_VERSION=$PKG_VERSION
@@ -30,8 +30,9 @@ jobs:
             curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
             apt-get -qq update
             apt-get install -y jq rpm
+            apt-get install -y software-properties-common apt-transport-https
             apt-get install -y python-pip python-virtualenv python-dev
-            apt-get install -y software-properties-common libsasl2-dev libldap2-dev apt-transport-https
+            apt-get install -y libsasl2-dev libldap2-dev libssl-dev
             add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
             apt-get -qq update
             apt-get install -y docker-ce
@@ -57,7 +58,7 @@ jobs:
             wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
             chmod 755 .circle/packagecloud.sh
             PKG_VERSION=$(python setup.py --version 2> /dev/null | sed 's/\.dev[0-9]$/dev/')
-            PKG_RELEASE=$(.circle/packagecloud.sh next-revision trusty ${PKG_VERSION} st2-auth-ldap)
+            PKG_RELEASE=$(.circle/packagecloud.sh next-revision xenial ${PKG_VERSION} st2-auth-ldap)
             echo "PKG_VERSION = ${PKG_VERSION}"
             echo "PKG_RELEASE = ${PKG_RELEASE}"
             echo "export PKG_VERSION=${PKG_VERSION}" >> ~/.circlerc
@@ -81,12 +82,11 @@ jobs:
           name: Build packages for supported distros on native OS inside stackstorm/buildpack container
           command: |
             source ~/.circlerc
-            # 1. Build Trusty and Xenial packages
-            # NOTE: We can re-use the same packages because both distros use same Python 2.7 version
+            # 1. Build Xenial packages
+            # NOTE: We can re-use the package for trusty because both trusty and xenial use same Python 2.7 version
             eval ${docker_run} stackstorm/buildpack:trusty make play deb
-            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/trusty
-            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/trusty
-            cp $ARTIFACTS/trusty/* $ARTIFACTS/xenial
+            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/xenial
+            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/xenial
             # 2. Build Bionic packages
             eval ${docker_run} stackstorm/buildpack:bionic make play deb
             docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/bionic
@@ -102,7 +102,6 @@ jobs:
       - persist_to_workspace:
           root: /artifacts
           paths:
-            - trusty
             - xenial
             - bionic
             - el7
@@ -111,7 +110,7 @@ jobs:
     <<: *defaults
     environment:
       ARTIFACTS: /artifacts
-      DISTROS: trusty xenial bionic el7 el8
+      DISTROS: xenial bionic el7 el8
     steps:
       - checkout
       - attach_workspace:
