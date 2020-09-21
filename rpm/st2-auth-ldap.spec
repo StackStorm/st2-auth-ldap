@@ -20,7 +20,7 @@ Release:        %{release}
 License:        Apache 2.0
 Summary:        LDAP authentication plugin for StackStorm
 URL:            https://stackstorm.com
-Source0:        st2-auth-backend-ldap
+Source0:        st2-auth-ldap
 
 Requires: st2 openldap
 
@@ -44,11 +44,11 @@ Requires: st2 openldap
   rm -rf %{buildroot}
 
 %post
-  %{pip} install --find-links %{st2wheels} --no-index --quiet --upgrade st2-auth-backend-ldap
+  %{pip} install --find-links %{st2wheels} --no-index --quiet --upgrade st2-auth-ldap
 
 %postun
   if [ $1 -eq 0 ]; then
-    %{pip} uninstall -y --quiet st2-auth-backend-ldap 1>/dev/null || :
+    %{pip} uninstall -y --quiet st2-auth-ldap 1>/dev/null || :
   fi
 
 %files

@@ -33,7 +33,7 @@ version = parse_version_string(INIT_FILE)
 install_reqs, dep_links = fetch_requirements(REQUIREMENTS_FILE)
 
 setup(
-    name='st2-auth-backend-ldap',
+    name='st2-auth-ldap',
     version=version,
     description='StackStorm authentication backend for LDAP.',
     author='StackStorm, Inc.',
