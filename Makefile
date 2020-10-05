@@ -175,9 +175,10 @@ install_deps:
 	# Well welcome to enterprise (rhel).
 	# Hardcore workaround to make wheel installable on any platform.
 	cd $(DESTDIR)/$(WHEELSDIR); \
-		ls -1 *-cp27mu-*.whl | while read f; do \
-			mv $$f $$(echo $$f | sed "s/cp27mu/none/"); \
-		done
+        find ./ -maxdepth 1 -name '*-cp27mu-*.whl' | while read f; do \
+            echo "Renaming $$f to $$(echo $$f | sed 's/cp27mu/none/')..."; \
+            mv $$f $$(echo $$f | sed "s/cp27mu/none/"); \
+        done
 
 deb:
 	[ -z "$(DEB_EPOCH)" ] && _epoch="" || _epoch="$(DEB_EPOCH):"; \
