@@ -30,7 +30,7 @@ else
     REDHAT := 1
 endif
 
-DEB_DISTRO := $(shell lsb_release -cs)
+DEB_DISTRO := $(shell lsb_release -cs || true)
 REDHAT_DISTRO := $(shell rpm --eval '%{rhel}')
 
 ifeq ($(DEB_DISTRO),)
