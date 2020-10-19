@@ -186,4 +186,4 @@ deb:
 	dpkg-buildpackage -b -uc -us -j`_cpunum=$$(nproc); echo "${_cpunum:-1}"`
 
 rpm:
-	rpmbuild -bb rpm/st2-auth-ldap.spec
+	rpmbuild -bb --define '_topdir %(readlink -f build)' rpm/st2-auth-ldap.spec
