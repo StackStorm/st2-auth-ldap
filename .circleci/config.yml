@@ -1,156 +1,45 @@
 # Setup in CircleCI account the following ENV variables:
-# IS_PRODUCTION (default: 0)
-# IS_ENTERPRISE (default: 0)
-# PACKAGECLOUD_ORGANIZATION (default: stackstorm)
-# PACKAGECLOUD_TOKEN
-defaults: &defaults
-  working_directory: ~/ldap
-  docker:
-    - image: ruby:2.4.4
 
 version: 2
 jobs:
-  build:
-    <<: *defaults
-    environment:
-      DISTROS: xenial bionic el7 el8
-      ARTIFACTS: /artifacts
-      docker_distros: xenial bionic centos7 centos8
-      docker_run: |-
-        docker run -w /code/ldap --volumes-from st2-ldap-vol
-          -e PKG_VERSION=$PKG_VERSION
-          -e PKG_RELEASE=$PKG_RELEASE
+  build_and_test_python36:
+    docker:
+      - image: circleci/python:3.6
+      - image: rabbitmq:3
+      - image: mongo:4.0
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - run:
-          name: Install dependencies
+          name: Clone StackStorm/st2 repo
           command: |
-            curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-            apt-get -qq update
-            apt-get install -y jq rpm
-            apt-get install -y software-properties-common apt-transport-https
-            apt-get install -y python-pip python-virtualenv python-dev
-            apt-get install -y libsasl2-dev libldap2-dev libssl-dev
-            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
-            apt-get -qq update
-            apt-get install -y docker-ce
-            gem install package_cloud
             make .clone_st2_repo
+      - restore_cache:
+          key: v1-dependency-cache-py36-{{ checksum "/tmp/st2/requirements.txt" }}
+      - run:
+          name: Download and install dependencies
+          command: |
+            sudo apt-get -y install libldap2-dev libsasl2-dev
             make requirements
-            mkdir ${ARTIFACTS} && cd ${ARTIFACTS} && mkdir ${DISTROS}
       - run:
-          name: Pull buildpacks
+          name: Run lint and tests (Python 3.6)
           command: |
-            for dist in $docker_distros; do
-              docker pull stackstorm/buildpack:$dist
-            done
-            echo "<-- BEGIN DOCKER IMAGE LIST -->"
-            docker image list
-            echo "<-- END DOCKER IMAGE LIST -->"
-      - run:
-          name: Setup circlerc_env
-          command: |
-            set -e
-            .circle/circlerc.sh
-            source ~/.circlerc
-            wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
-            chmod 755 .circle/packagecloud.sh
-            PKG_VERSION=$(python setup.py --version 2> /dev/null | sed 's/\.dev[0-9]$/dev/')
-            PKG_RELEASE=$(.circle/packagecloud.sh next-revision xenial ${PKG_VERSION} st2-auth-ldap)
-            echo "PKG_VERSION = ${PKG_VERSION}"
-            echo "PKG_RELEASE = ${PKG_RELEASE}"
-            echo "export PKG_VERSION=${PKG_VERSION}" >> ~/.circlerc
-            echo "export PKG_RELEASE=${PKG_RELEASE}" >> ~/.circlerc
-      - run:
-          name: Make lint and unit tests
-          command: |
-            source virtualenv/bin/activate
             make .lint
             make .unit-tests
-      - run:
-          # Workaround for CircleCI docker-compose limitation where volumes don't work
-          # See detailed explanation: https://circleci.com/docs/2.0/building-docker-images/#mounting-folders
-          name: Copy st2-packages files to build containers
-          command: |
-            # creating dummy container which will hold a volume with data files
-            docker create -v /code --name st2-ldap-vol alpine:3.4 /bin/true
-            # copy st2-packages data files into this volume
-            docker cp ~/ldap st2-ldap-vol:/code
-      - run:
-          name: Build packages for supported distros on native OS inside stackstorm/buildpack container
-          command: |
-            source ~/.circlerc
-            # 1. Build Xenial packages
-            # NOTE: We can re-use the package for trusty because both trusty and xenial use same Python 2.7 version
-            eval ${docker_run} stackstorm/buildpack:trusty make play deb
-            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/xenial
-            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/xenial
-            # 2. Build Bionic packages
-            eval ${docker_run} stackstorm/buildpack:bionic make play deb
-            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.deb $ARTIFACTS/bionic
-            docker cp st2-ldap-vol:/code/st2-auth-ldap_${PKG_VERSION}-${PKG_RELEASE}_amd64.changes $ARTIFACTS/bionic
-            # 3. Build RHEL 7 packages
-            eval ${docker_run} stackstorm/buildpack:centos7 make play rpm
-            docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el7
-            # 4. Build RHEL 8 packages
-            eval ${docker_run} stackstorm/buildpack:centos8 make play rpm
-            docker cp st2-ldap-vol:/code/ldap/build/x86_64/st2-auth-ldap-${PKG_VERSION}-${PKG_RELEASE}.x86_64.rpm $ARTIFACTS/el8
-      - store_artifacts:
-          path: /artifacts
-      - persist_to_workspace:
-          root: /artifacts
+      - save_cache:
+          key: v1-dependency-cache-py36-{{ checksum "/tmp/st2/requirements.txt" }}
           paths:
-            - xenial
-            - bionic
-            - el7
-            - el8
-  deploy:
-    <<: *defaults
-    environment:
-      ARTIFACTS: /artifacts
-      DISTROS: xenial bionic el7 el8
-    steps:
-      - checkout
-      - attach_workspace:
-          at: /artifacts
-      - run:
-          name: List workspace files
-          command: find $ARTIFACTS | sed 's|[^/]*/|  |g'
-      - run:
-          name: Install dependencies
-          command: |
-            set -x
-            apt-get -qq update
-            apt-get -y install jq
-            wget -qO - https://github.com/StackStorm/st2-packages/raw/master/.circle/packagecloud.sh > .circle/packagecloud.sh
-            chmod 755 .circle/packagecloud.sh
-            gem install package_cloud
-      - run:
-          name: Deploy to packagecloud
-          command: |
-            for distro in ${DISTROS}; do
-              .circle/packagecloud.sh deploy $distro $ARTIFACTS/$distro
-            done
+            - ~/.cache/pip
+            - ~/.apt-cache
 
 workflows:
   version: 2
+  # Workflow which runs on each posh
   build_test_deploy_on_push:
     jobs:
-      - build
-      - deploy:
-          requires:
-            - build
-          filters:
-            branches:
-              only:
-                - master
-                - /v[0-9]+\.[0-9]+/
-                - feature/circleci
+      - build_and_test_python36
   build_test_nightly:
     jobs:
-        - build
+      - build_and_test_python36
     triggers:
       # Run nightly build for the pack
       - schedule:
