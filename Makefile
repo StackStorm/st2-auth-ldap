@@ -57,29 +57,26 @@ $(VIRTUALENV_DIR)/bin/activate:
 	@echo
 	@echo "==================== virtualenv ===================="
 	@echo
-	test -d $(VIRTUALENV_DIR) || virtualenv --no-site-packages $(VIRTUALENV_DIR)
+	test -d $(VIRTUALENV_DIR) || virtualenv $(VIRTUALENV_DIR)
 
 	# Setup PYTHONPATH in bash activate script...
-	echo '' >> $(VIRTUALENV_DIR)/bin/activate
+	# Delete existing entries (if any)
+ifeq ($(OS),Darwin)
+	echo 'Setting up virtualenv on $(OS)...'
+	sed -i '' '/_OLD_PYTHONPATHp/d' $(VIRTUALENV_DIR)/bin/activate
+	sed -i '' '/PYTHONPATH=/d' $(VIRTUALENV_DIR)/bin/activate
+	sed -i '' '/export PYTHONPATH/d' $(VIRTUALENV_DIR)/bin/activate
+else
+	echo 'Setting up virtualenv on $(OS)...'
+	sed -i '/_OLD_PYTHONPATHp/d' $(VIRTUALENV_DIR)/bin/activate
+	sed -i '/PYTHONPATH=/d' $(VIRTUALENV_DIR)/bin/activate
+	sed -i '/export PYTHONPATH/d' $(VIRTUALENV_DIR)/bin/activate
+endif
+
 	echo '_OLD_PYTHONPATH=$$PYTHONPATH' >> $(VIRTUALENV_DIR)/bin/activate
-	echo 'PYTHONPATH=$$_OLD_PYTHONPATH:$(COMPONENT_PYTHONPATH)' >> $(VIRTUALENV_DIR)/bin/activate
+	echo 'PYTHONPATH=$(COMPONENT_PYTHONPATH)' >> $(VIRTUALENV_DIR)/bin/activate
 	echo 'export PYTHONPATH' >> $(VIRTUALENV_DIR)/bin/activate
 	touch $(VIRTUALENV_DIR)/bin/activate
-
-	# Setup PYTHONPATH in fish activate script...
-	echo '' >> $(VIRTUALENV_DIR)/bin/activate.fish
-	echo 'set -gx _OLD_PYTHONPATH $$PYTHONPATH' >> $(VIRTUALENV_DIR)/bin/activate.fish
-	echo 'set -gx PYTHONPATH $$_OLD_PYTHONPATH $(COMPONENT_PYTHONPATH)' >> $(VIRTUALENV_DIR)/bin/activate.fish
-	echo 'functions -c deactivate old_deactivate' >> $(VIRTUALENV_DIR)/bin/activate.fish
-	echo 'function deactivate' >> $(VIRTUALENV_DIR)/bin/activate.fish
-	echo '  if test -n $$_OLD_PYTHONPATH' >> $(VIRTUALENV_DIR)/bin/activate.fish
-	echo '    set -gx PYTHONPATH $$_OLD_PYTHONPATH' >> $(VIRTUALENV_DIR)/bin/activate.fish
-	echo '    set -e _OLD_PYTHONPATH' >> $(VIRTUALENV_DIR)/bin/activate.fish
-	echo '  end' >> $(VIRTUALENV_DIR)/bin/activate.fish
-	echo '  old_deactivate' >> $(VIRTUALENV_DIR)/bin/activate.fish
-	echo '  functions -e old_deactivate' >> $(VIRTUALENV_DIR)/bin/activate.fish
-	echo 'end' >> $(VIRTUALENV_DIR)/bin/activate.fish
-	touch $(VIRTUALENV_DIR)/bin/activate.fish
 
 .PHONY: lint
 lint: requirements flake8 pylint
