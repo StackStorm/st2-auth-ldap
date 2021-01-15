@@ -34,6 +34,10 @@ COMPONENTS_TEST_COMMA := $(subst $(slash),$(dot),$(subst $(space_char),$(comma),
 COMPONENTS_TEST_MODULES := $(subst $(slash),$(dot),$(COMPONENTS_TEST_DIRS))
 COMPONENTS_TEST_MODULES_COMMA := $(subst $(space_char),$(comma),$(COMPONENTS_TEST_MODULES))
 
+ifndef PYLINT_CONCURRENCY
+	PYLINT_CONCURRENCY := 1
+endif
+
 .PHONY: play
 play:
 	@echo
@@ -102,6 +106,9 @@ endif
 	echo 'export PYTHONPATH' >> $(VIRTUALENV_DIR)/bin/activate
 	touch $(VIRTUALENV_DIR)/bin/activate
 
+.PHONY: all
+all: requirements lint unit-tests
+
 .PHONY: lint
 lint: requirements flake8 pylint
 
@@ -147,4 +154,4 @@ unit-tests: requirements .clone_st2_repo .unit-tests
 	@echo
 	@echo "==================== pylint ===================="
 	@echo
-	. $(VIRTUALENV_DIR)/bin/activate; pylint -j $(PYLINT_CONCURRENCY) -E --rcfile=./lint-configs/python/.pylintrc --load-plugins=pylint_plugins.api_models --load-plugins=pylint_plugins.db_models st2auth_ldap/
+	. $(VIRTUALENV_DIR)/bin/activate; pylint -j $(PYLINT_CONCURRENCY) -E --rcfile=./lint-configs/python/.pylintrc st2auth_ldap/
