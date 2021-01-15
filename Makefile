@@ -19,7 +19,6 @@ VIRTUALENV_DIR ?= virtualenv
 ST2_REPO_PATH ?= /tmp/st2
 ST2_REPO_BRANCH ?= master
 
-REQUIREMENTS := test-requirements.txt requirements.txt
 PIP_OPTIONS := $(ST2_PIP_OPTIONS)
 
 # nasty hack to get a space into a variable
@@ -27,7 +26,13 @@ space_char :=
 space_char +=
 comma := ,
 COMPONENTS = $(wildcard $(ST2_REPO_PATH)/st2*)
-COMPONENT_PYTHONPATH = $(subst $(space_char),:,$(realpath $(COMPONENTS)))
+COMPONENTS_RUNNERS := $(wildcard $(ST2_REPO_PATH)/contrib/runners/*)
+COMPONENTS_WITH_RUNNERS := $(COMPONENTS) $(COMPONENTS_RUNNERS)
+COMPONENT_PYTHONPATH = $(subst $(space_char),:,$(realpath $(COMPONENTS_WITH_RUNNERS))):$(ST2_REPO_PATH):$(CURRENT_DIR)
+COMPONENTS_TEST := $(foreach component,$(filter-out $(COMPONENT_SPECIFIC_TESTS),$(COMPONENTS_WITH_RUNNERS)),$(component))
+COMPONENTS_TEST_COMMA := $(subst $(slash),$(dot),$(subst $(space_char),$(comma),$(COMPONENTS_TEST)))
+COMPONENTS_TEST_MODULES := $(subst $(slash),$(dot),$(COMPONENTS_TEST_DIRS))
+COMPONENTS_TEST_MODULES_COMMA := $(subst $(space_char),$(comma),$(COMPONENTS_TEST_MODULES))
 
 .PHONY: play
 play:
@@ -36,20 +41,39 @@ play:
 	@echo
 
 .PHONY: requirements
-requirements: virtualenv
+requirements: .clone_st2_repo virtualenv
 	@echo
 	@echo "==================== requirements ===================="
 	@echo
+	$(VIRTUALENV_DIR)/bin/pip install --cache-dir $(HOME)/.pip-cache $(PIP_OPTIONS) -r $(ST2_REPO_PATH)/requirements.txt
+	$(VIRTUALENV_DIR)/bin/pip install --cache-dir $(HOME)/.pip-cache $(PIP_OPTIONS) -r requirements.txt
+	$(VIRTUALENV_DIR)/bin/pip install --cache-dir $(HOME)/.pip-cache $(PIP_OPTIONS) -r test-requirements.txt
 
-	# Install requirements
-	for req in $(REQUIREMENTS); do \
-			echo "Installing $$req..." ; \
-			$(VIRTUALENV_DIR)/bin/pip install $(PIP_OPTIONS) -r $$req; \
+	@echo ""
+	@echo "================== install runners ===================="
+	@echo ""
+	@for component in $(COMPONENTS_RUNNERS); do \
+        echo "==========================================================="; \
+        echo "Installing runner:" $$component; \
+        echo "==========================================================="; \
+        (. $(VIRTUALENV_DIR)/bin/activate; cd $$component; python setup.py develop --no-deps); \
 	done
+	@echo ""
+	@echo "================== register metrics drivers ======================"
+	@echo ""
+	# Install st2common to register metrics drivers
+	(. $(VIRTUALENV_DIR)/bin/activate; cd $(ST2_REPO_PATH)/st2common; python setup.py develop --no-deps)
+	@echo ""
+	@echo "================== register st2auth ======================"
+	@echo ""
+	# Install st2auth
+	(. $(VIRTUALENV_DIR)/bin/activate; cd $(ST2_REPO_PATH)/st2auth; python setup.py develop --no-deps)
+	@echo ""
+	@echo "================== register ldap ======================"
+	@echo ""
+	(. $(VIRTUALENV_DIR)/bin/activate; python setup.py develop --no-deps)
 
-	# Install st2 requirements
-	$(VIRTUALENV_DIR)/bin/pip install -r $(ST2_REPO_PATH)/requirements.txt; \
-	$(VIRTUALENV_DIR)/bin/pip install -r $(ST2_REPO_PATH)/test-requirements.txt; \
+.PHONY: requirements-ci
 
 .PHONY: virtualenv
 virtualenv: $(VIRTUALENV_DIR)/bin/activate .clone_st2_repo
