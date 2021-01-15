@@ -54,20 +54,6 @@ requirements: .clone_st2_repo virtualenv
 	$(VIRTUALENV_DIR)/bin/pip install --cache-dir $(HOME)/.pip-cache $(PIP_OPTIONS) -r test-requirements.txt
 
 	@echo ""
-	@echo "================== install runners ===================="
-	@echo ""
-	@for component in $(COMPONENTS_RUNNERS); do \
-        echo "==========================================================="; \
-        echo "Installing runner:" $$component; \
-        echo "==========================================================="; \
-        (. $(VIRTUALENV_DIR)/bin/activate; cd $$component; python setup.py develop --no-deps); \
-	done
-	@echo ""
-	@echo "================== register metrics drivers ======================"
-	@echo ""
-	# Install st2common to register metrics drivers
-	(. $(VIRTUALENV_DIR)/bin/activate; cd $(ST2_REPO_PATH)/st2common; python setup.py develop --no-deps)
-	@echo ""
 	@echo "================== register st2auth ======================"
 	@echo ""
 	# Install st2auth
