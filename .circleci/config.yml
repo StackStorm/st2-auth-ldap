@@ -1,7 +1,4 @@
 # Setup in CircleCI account the following ENV variables:
-# IS_PRODUCTION (default: 0)
-# PACKAGECLOUD_ORGANIZATION (default: stackstorm)
-# PACKAGECLOUD_TOKEN
 
 version: 2
 jobs:
