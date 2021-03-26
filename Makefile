@@ -49,7 +49,10 @@ requirements: .clone_st2_repo virtualenv
 	@echo
 	@echo "==================== requirements ===================="
 	@echo
+	$(eval PIP_VERSION := $(shell grep 'PIP_VERSION ?= ' /tmp/st2/Makefile | awk '{ print $$3}'))
+	$(VIRTUALENV_DIR)/bin/pip install --upgrade "pip==$(PIP_VERSION)"
 	$(VIRTUALENV_DIR)/bin/pip install --cache-dir $(HOME)/.pip-cache $(PIP_OPTIONS) -r $(ST2_REPO_PATH)/requirements.txt
+	$(VIRTUALENV_DIR)/bin/pip install --cache-dir $(HOME)/.pip-cache $(PIP_OPTIONS) -r $(ST2_REPO_PATH)/test-requirements.txt
 	$(VIRTUALENV_DIR)/bin/pip install --cache-dir $(HOME)/.pip-cache $(PIP_OPTIONS) -r requirements.txt
 	$(VIRTUALENV_DIR)/bin/pip install --cache-dir $(HOME)/.pip-cache $(PIP_OPTIONS) -r test-requirements.txt
 
@@ -57,11 +60,11 @@ requirements: .clone_st2_repo virtualenv
 	@echo "================== register st2auth ======================"
 	@echo ""
 	# Install st2auth
-	(. $(VIRTUALENV_DIR)/bin/activate; cd $(ST2_REPO_PATH)/st2auth; python setup.py develop --no-deps)
+	(. $(VIRTUALENV_DIR)/bin/activate; cd $(ST2_REPO_PATH)/st2auth; python3 setup.py develop --no-deps)
 	@echo ""
 	@echo "================== register ldap ======================"
 	@echo ""
-	(. $(VIRTUALENV_DIR)/bin/activate; python setup.py develop --no-deps)
+	(. $(VIRTUALENV_DIR)/bin/activate; python3 setup.py develop --no-deps)
 
 .PHONY: requirements-ci
 
@@ -71,7 +74,7 @@ $(VIRTUALENV_DIR)/bin/activate:
 	@echo
 	@echo "==================== virtualenv ===================="
 	@echo
-	test -d $(VIRTUALENV_DIR) || virtualenv $(VIRTUALENV_DIR)
+	test -d $(VIRTUALENV_DIR) || virtualenv $(VIRTUALENV_DIR) -p python3
 
 	# Setup PYTHONPATH in bash activate script...
 	# Delete existing entries (if any)
