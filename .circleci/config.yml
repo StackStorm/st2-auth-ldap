@@ -31,15 +31,47 @@ jobs:
             - ~/.cache/pip
             - ~/.apt-cache
 
+  build_and_test_python38:
+    docker:
+      - image: circleci/python:3.8
+      - image: rabbitmq:3
+      - image: mongo:4.0
+    steps:
+      - checkout
+      - run:
+          name: Clone StackStorm/st2 repo
+          command: |
+            make .clone_st2_repo
+      - restore_cache:
+          key: v1-dependency-cache-py38-{{ checksum "/tmp/st2/requirements.txt" }}
+      - run:
+          name: Download and install dependencies
+          command: |
+            sudo apt-get -y install libldap2-dev libsasl2-dev
+            make requirements
+      - run:
+          name: Run lint and tests (Python 3.8)
+          command: |
+            make .lint
+            make .unit-tests
+      - save_cache:
+          key: v1-dependency-cache-py36-{{ checksum "/tmp/st2/requirements.txt" }}
+          paths:
+            - ~/.cache/pip
+            - ~/.apt-cache
+
+workflows:
 workflows:
   version: 2
-  # Workflow which runs on each posh
+  # Workflow which runs on each push
   build_test_deploy_on_push:
     jobs:
       - build_and_test_python36
+      - build_and_test_python38
   build_test_nightly:
     jobs:
       - build_and_test_python36
+      - build_and_test_python38
     triggers:
       # Run nightly build for the pack
       - schedule:
