@@ -67,7 +67,8 @@ class LDAPAuthenticationBackend(object):
                  use_ssl=False, use_tls=False, cacert=None, network_timeout=10.0,
                  chase_referrals=False, debug=False, client_options=None,
                  group_dns_check='and', cache_user_groups_response=True,
-                 cache_user_groups_cache_ttl=120, cache_user_groups_cache_max_size=100, base_ou_group=None):
+                 cache_user_groups_cache_ttl=120, cache_user_groups_cache_max_size=100,
+                 base_ou_group=None):
         if not bind_dn:
             raise ValueError('Bind DN to query the LDAP server is not provided.')
 
