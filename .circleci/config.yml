@@ -55,12 +55,11 @@ jobs:
             make .lint
             make .unit-tests
       - save_cache:
-          key: v1-dependency-cache-py36-{{ checksum "/tmp/st2/requirements.txt" }}
+          key: v1-dependency-cache-py38-{{ checksum "/tmp/st2/requirements.txt" }}
           paths:
             - ~/.cache/pip
             - ~/.apt-cache
 
-workflows:
 workflows:
   version: 2
   # Workflow which runs on each push
