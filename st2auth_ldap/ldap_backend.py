@@ -67,7 +67,8 @@ class LDAPAuthenticationBackend(object):
                  use_ssl=False, use_tls=False, cacert=None, network_timeout=10.0,
                  chase_referrals=False, debug=False, client_options=None,
                  group_dns_check='and', cache_user_groups_response=True,
-                 cache_user_groups_cache_ttl=120, cache_user_groups_cache_max_size=100):
+                 cache_user_groups_cache_ttl=120, cache_user_groups_cache_max_size=100,
+                 base_ou_group=None):
         if not bind_dn:
             raise ValueError('Bind DN to query the LDAP server is not provided.')
 
@@ -121,6 +122,7 @@ class LDAPAuthenticationBackend(object):
         self._base_ou = base_ou
         self._scope = SEARCH_SCOPES[scope]
 
+        self._base_ou_group = base_ou_group or base_ou
         if not group_dns:
             raise ValueError('One or more user groups must be specified.')
 
@@ -352,7 +354,7 @@ class LDAPAuthenticationBackend(object):
             'username': ldap.filter.escape_filter_chars(username),
         }
         query = self._group_pattern.format(**filter_values)
-        result = connection.search_s(self._base_ou, self._scope, query, [])
+        result = connection.search_s(self._base_ou_group, self._scope, query, [])
 
         if result:
             groups = [entry[0] for entry in result if entry[0] is not None]

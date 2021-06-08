@@ -1,5 +1,5 @@
 # LDAP authentication backend for StackStorm
-[![LDAP Unit Tests Status](https://circleci.com/gh/StackStorm/st2-auth-ldap/tree/master.svg?style=shield)](https://circleci.com/gh/StackStorm/st2-auth-ldap) 
+[![LDAP Unit Tests Status](https://circleci.com/gh/StackStorm/st2-auth-ldap/tree/master.svg?style=shield)](https://circleci.com/gh/StackStorm/st2-auth-ldap)
 
 ## Requirements
 
@@ -39,6 +39,7 @@ sudo dnf install python2-devel python3-devel openldap-devel
 | client_options             | no       |                | A dictionary with additional Python LDAP client options which can be passed to `set_connection()` method                       |
 | cache_user_groups_response | no       | `true`         | When true, LDAP user groups response is cached for 120 seconds (by default) in memory. This decreases load on LDAP server and increases performance when remote LDAP group to RBAC role sync is enabled and / or when the same user authenticates concurrency in a short time frame. Keep in mind that even when this feature is enabled, single (authenticate) request to LDAP server will still be performed when user authenticates to st2auth - authentication information is not cached - only user groups are cached. |
 | cache_user_groups_ttl      | no       | `120`          | How long (in seconds)                                                                                                          |
+| base_ou_group              | no       | `None`         | Base OU to search for group entries. If not specified will default to None and take value of base_ou                           |
 
 ## Implementation Overview
 
