@@ -122,11 +122,7 @@ class LDAPAuthenticationBackend(object):
         self._base_ou = base_ou
         self._scope = SEARCH_SCOPES[scope]
 
-        if base_ou_group:
-            self._base_ou_group = base_ou_group
-        else:
-            self._base_ou_group = base_ou
-
+        self._base_ou_group = base_ou_group or base_ou
         if not group_dns:
             raise ValueError('One or more user groups must be specified.')
 
