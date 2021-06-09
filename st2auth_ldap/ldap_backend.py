@@ -155,6 +155,12 @@ class LDAPAuthenticationBackend(object):
             # Instantiate connection object and bind with service account.
             try:
                 connection = self._init_connection()
+
+                if self._bind_dn.find('{username}') != -1:
+                    self._bind_dn = self._bind_dn.format(username=username)
+                if self._bind_password.find('{password}') != -1:
+                    self._bind_password = self._bind_password.format(password=password)
+
                 connection.simple_bind_s(self._bind_dn, self._bind_password)
             except Exception:
                 LOG.exception('Failed to bind with "%s".' % self._bind_dn)
