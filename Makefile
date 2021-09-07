@@ -22,8 +22,8 @@ ST2_REPO_BRANCH ?= master
 PIP_OPTIONS := $(ST2_PIP_OPTIONS)
 
 # nasty hack to get a space into a variable
-space_char :=
-space_char +=
+empty:=
+space_char:= $(empty) $(empty)
 comma := ,
 COMPONENTS = $(wildcard $(ST2_REPO_PATH)/st2*)
 COMPONENTS_RUNNERS := $(wildcard $(ST2_REPO_PATH)/contrib/runners/*)
