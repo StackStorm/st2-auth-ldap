@@ -74,9 +74,6 @@ $(VIRTUALENV_DIR)/bin/activate:
 	@echo
 	@echo "==================== virtualenv ===================="
 	@echo
-	@echo "COMPONENT_PYTHONPATH_${COMPONENT_PYTHONPATH}_"
-	@echo "COMPONENTS_WITH_RUNNERS_${COMPONENTS_WITH_RUNNERS}_"
-	@echo "space_char_${space_char}:"
 	test -d $(VIRTUALENV_DIR) || virtualenv $(VIRTUALENV_DIR) -p python3
 
 	# Setup PYTHONPATH in bash activate script...
