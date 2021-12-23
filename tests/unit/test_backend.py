@@ -25,6 +25,7 @@ from st2auth_ldap import ldap_backend
 
 
 LDAP_HOST = '127.0.0.1'
+LDAP_MULTIPLE_HOSTS = '127.0.0.1,localhost'
 LDAPS_PORT = 636
 LDAP_BIND_DN = 'cn=Administrator,cn=users,dc=stackstorm,dc=net'
 LDAP_BIND_PASSWORD = uuid.uuid4().hex
@@ -108,6 +109,25 @@ class LDAPBackendTest(unittest2.TestCase):
             LDAP_BASE_OU,
             LDAP_GROUP_DNS,
             LDAP_HOST,
+            id_attr=LDAP_ID_ATTR
+        )
+
+        authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_PASSWD)
+        self.assertTrue(authenticated)
+
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
+        mock.MagicMock(return_value=None))
+    @mock.patch.object(
+        ldap.ldapobject.SimpleLDAPObject, 'search_s',
+        mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    def test_authenticate_with_multiple_ldap_hosts(self):
+        backend = ldap_backend.LDAPAuthenticationBackend(
+            LDAP_BIND_DN,
+            LDAP_BIND_PASSWORD,
+            LDAP_BASE_OU,
+            LDAP_GROUP_DNS,
+            LDAP_MULTIPLE_HOSTS,
             id_attr=LDAP_ID_ATTR
         )
 
