@@ -279,7 +279,11 @@ class LDAPAuthenticationBackend(object):
 
         # Setup connection and options.
         protocol = 'ldaps' if self._use_ssl else 'ldap'
-        endpoint = '%s://%s:%d' % (protocol, self._host, int(self._port))
+        hosts = self._host.split(',')
+        for i in range(len(hosts)):
+            hosts[i] = '%s://%s:%d' % (protocol, hosts[i], int(self._port))
+
+        endpoint = ','.join(hosts)
         connection = ldap.initialize(endpoint, trace_level=trace_level)
         connection.set_option(ldap.OPT_DEBUG_LEVEL, 255)
         connection.set_option(ldap.OPT_PROTOCOL_VERSION, ldap.VERSION3)
