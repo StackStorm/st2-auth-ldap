@@ -17,7 +17,7 @@ from __future__ import absolute_import
 
 from .ldap_backend import LDAPAuthenticationBackend
 
-__version__ = '3.7dev'
+__version__ = "3.8dev"
 
 __all__ = [
     'LDAPAuthenticationBackend'
