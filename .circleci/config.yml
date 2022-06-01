@@ -12,7 +12,7 @@ jobs:
       - run:
           name: Clone StackStorm/st2 repo
           command: |
-            make .clone_st2_repo
+            echo Test; make .clone_st2_repo
       - restore_cache:
           key: v1-dependency-cache-py36-{{ checksum "/tmp/st2/requirements.txt" }}
       - run:
