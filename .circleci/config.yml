@@ -18,6 +18,7 @@ jobs:
       - run:
           name: Download and install dependencies
           command: |
+            sudo apt-get update
             sudo apt-get -y install libldap2-dev libsasl2-dev
             make requirements
       - run:
@@ -47,6 +48,7 @@ jobs:
       - run:
           name: Download and install dependencies
           command: |
+            sudo apt-get update
             sudo apt-get -y install libldap2-dev libsasl2-dev
             make requirements
       - run:
