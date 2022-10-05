@@ -1,5 +1,6 @@
 # LDAP authentication backend for StackStorm
-[![LDAP Unit Tests Status](https://circleci.com/gh/StackStorm/st2-auth-ldap/tree/master.svg?style=shield)](https://circleci.com/gh/StackStorm/st2-auth-ldap)
+
+[![LDAP Unit Tests Status](https://github.com/StackStorm/st2-auth-ldap/actions/workflows/lint-and-unit-tests.yml/badge.svg)](https://github.com/StackStorm/st2-auth-ldap/actions/workflows/lint-and-unit-tests.yml)
 
 ## Requirements
 
