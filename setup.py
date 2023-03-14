@@ -16,15 +16,9 @@
 import os
 
 from setuptools import setup, find_packages
-from dist_utils import check_pip_version
+
 from dist_utils import fetch_requirements
 from dist_utils import parse_version_string
-# Monkey patch to avoid version normalization like '2.9dev' -> '2.9.dev0', (https://github.com/pypa/setuptools/issues/308)
-# NOTE: This doesn't work under Bionic
-# from setuptools.extern.packaging import version
-# version.Version = version.LegacyVersion
-
-check_pip_version()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 REQUIREMENTS_FILE = os.path.join(BASE_DIR, 'requirements.txt')
@@ -45,13 +39,10 @@ setup(
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         'Environment :: Console',
     ],
     platforms=['Any'],
