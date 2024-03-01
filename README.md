@@ -42,6 +42,10 @@ sudo dnf install python2-devel python3-devel openldap-devel
 | cache_user_groups_ttl      | no       | `120`          | How long (in seconds)                                                                                                          |
 | base_ou_group              | no       | `None`         | Base OU to search for group entries. If not specified will default to None and take value of base_ou                           |
 
+### Escaping Password Characters
+
+Passwords that contain the `$` character are required to be escaped in the form `$$` because the underlying modules that process the backend configuration uses [Python Template Strings](https://docs.python.org/3/library/string.html#template-strings).
+
 ## Implementation Overview
 
 The LDAP backend attempts a few different LDAP operations to authenticate users against an LDAP server:
