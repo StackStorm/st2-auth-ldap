@@ -1,7 +1,7 @@
 # python-ldap 3.4.1 adds support for openldap 2.5+
 python-ldap>=3.4.0,<3.5.0
 # cachetools:
-#   - 3 requires python3.4+; 4 requires python3.5+; 5 requires python3.7+
-#   - 3 adds python3.7 support; 3.1 adds python3.8; 4.2 adds python3.9;
+#   - 3.1 adds python3.8
+#   - 4.2 adds python3.9
 #   - 5.2.1 adds python3.11
-cachetools>=2.0.1,<5.4.0
+cachetools>=3.1,<5.4.0
