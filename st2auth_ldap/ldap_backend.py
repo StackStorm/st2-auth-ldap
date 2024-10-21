@@ -21,6 +21,7 @@ import os
 import logging
 
 import ldap
+import ldap.dn
 import ldap.filter
 import ldapurl
 
@@ -374,8 +375,17 @@ class LDAPAuthenticationBackend(object):
         in the config (and / or).
         """
 
-        user_groups = set([entry.lower() for entry in user_groups])
-        required_groups = set([entry.lower() for entry in required_groups])
+        # normalize DN strings (lowercase, remove spaces, etc)
+        user_group_dns = [
+            ldap.dn.str2dn(group.lower(), flags=ldap.DN_FORMAT_LDAPV3)
+            for group in user_groups
+        ]
+        required_group_dns = [
+            ldap.dn.str2dn(group.lower(), flags=ldap.DN_FORMAT_LDAPV3)
+            for group in required_groups
+        ]
+        norm_user_groups = {ldap.dn.dn2str(dn) for dn in user_group_dns}
+        norm_required_groups = {ldap.dn.dn2str(dn) for dn in required_group_dns}
 
         if check_behavior == 'and':
             additional_msg = ('user needs to be member of all the following groups "%s" for '
@@ -389,11 +399,13 @@ class LDAPAuthenticationBackend(object):
         LOG.debug('Verifying user group membership using "%s" behavior (%s)' %
                   (check_behavior, additional_msg))
 
-        # simple fully qualified group name match
+        # simple fully qualified DN match
         if (
-            check_behavior == 'and' and required_groups.issubset(user_groups)
+            check_behavior == 'and'
+            and norm_required_groups.issubset(norm_user_groups)
         ) or (
-            check_behavior == 'or' and required_groups.intersection(user_groups)
+            check_behavior == 'or'
+            and norm_required_groups.intersection(norm_user_groups)
         ):
             return True
 
