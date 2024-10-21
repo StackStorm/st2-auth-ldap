@@ -51,6 +51,7 @@ setup(
         "Programming Language :: Python :: 3.11",
         'Environment :: Console',
     ],
+    python_requires='>=3.8',
     platforms=['Any'],
     scripts=[],
     provides=['st2auth_ldap'],
