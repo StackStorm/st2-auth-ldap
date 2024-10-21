@@ -389,12 +389,13 @@ class LDAPAuthenticationBackend(object):
         LOG.debug('Verifying user group membership using "%s" behavior (%s)' %
                   (check_behavior, additional_msg))
 
-        if check_behavior == 'and':
-            if required_groups.issubset(user_groups):
-                return True
-        elif check_behavior == 'or':
-            if required_groups.intersection(user_groups):
-                return True
+        # simple fully qualified group name match
+        if (
+            check_behavior == 'and' and required_groups.issubset(user_groups)
+        ) or (
+            check_behavior == 'or' and required_groups.intersection(user_groups)
+        ):
+            return True
 
         msg = ('Unable to verify membership for user "%s (required_groups=%s,'
                'actual_groups=%s,check_behavior=%s)".' % (username, str(required_groups),
