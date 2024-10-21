@@ -14,12 +14,12 @@
 # limitations under the License.
 
 import os
-import unittest2
+import unittest
 
 from st2auth_ldap import ldap_backend
 
 
-class OpenLDAPAuthenticationTest(unittest2.TestCase):
+class OpenLDAPAuthenticationTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):

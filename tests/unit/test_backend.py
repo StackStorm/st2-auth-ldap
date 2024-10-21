@@ -19,7 +19,7 @@ import uuid
 
 import ldap
 import mock
-import unittest2
+import unittest
 
 from st2auth_ldap import ldap_backend
 
@@ -82,7 +82,7 @@ __all__ = [
 ]
 
 
-class LDAPBackendTest(unittest2.TestCase):
+class LDAPBackendTest(unittest.TestCase):
 
     def test_instantaite_no_group_dns_provided(self):
         # User is member of two of the groups, but none of them are required
