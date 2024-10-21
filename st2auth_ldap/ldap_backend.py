@@ -133,7 +133,7 @@ class LDAPAuthenticationBackend(object):
                              '%s.' % (group_dns_check, valid_values))
 
         self._group_dns_check = group_dns_check
-        self._group_dns = group_dns
+        self._group_dns = self._normalize_group_dns(group_dns)
 
         self._cache_user_groups_response = cache_user_groups_response
         self._cache_user_groups_cache_ttl = int(cache_user_groups_cache_ttl)
@@ -368,24 +368,28 @@ class LDAPAuthenticationBackend(object):
 
         return groups
 
-    def _verify_user_group_membership(self, username, required_groups, user_groups,
-                                      check_behavior='and'):
+    @staticmethod
+    def _normalize_group_dns(groups: List[str]) -> Set[str]:
+        """Normalize group DNs by lowercasing and parsing to strip spaces."""
+        return {
+            ldap.dn.dn2str(
+                ldap.dn.str2dn(group.lower(), flags=ldap.DN_FORMAT_LDAPV3)
+            ) for group in groups
+        }
+
+    def _verify_user_group_membership(
+        self,
+        username: str,
+        required_groups: Set[str],
+        user_groups: List[str],
+        check_behavior: str = "and",
+    ):
         """
         Validate that the user is a member of required groups based on the check behavior defined
         in the config (and / or).
         """
 
-        # normalize DN strings (lowercase, remove spaces, etc)
-        user_group_dns = [
-            ldap.dn.str2dn(group.lower(), flags=ldap.DN_FORMAT_LDAPV3)
-            for group in user_groups
-        ]
-        required_group_dns = [
-            ldap.dn.str2dn(group.lower(), flags=ldap.DN_FORMAT_LDAPV3)
-            for group in required_groups
-        ]
-        norm_user_groups = {ldap.dn.dn2str(dn) for dn in user_group_dns}
-        norm_required_groups = {ldap.dn.dn2str(dn) for dn in required_group_dns}
+        norm_user_groups = self._normalize_group_dns(user_groups)
 
         if check_behavior == 'and':
             additional_msg = ('user needs to be member of all the following groups "%s" for '
@@ -403,10 +407,10 @@ class LDAPAuthenticationBackend(object):
         # simple fully qualified DN match
         if (
             check_behavior == 'and'
-            and norm_required_groups.issubset(norm_user_groups)
+            and required_groups.issubset(norm_user_groups)
         ) or (
             check_behavior == 'or'
-            and norm_required_groups.intersection(norm_user_groups)
+            and required_groups.intersection(norm_user_groups)
         ):
             return True
 
