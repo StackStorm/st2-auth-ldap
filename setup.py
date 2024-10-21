@@ -27,10 +27,15 @@ INIT_FILE = os.path.join(BASE_DIR, 'st2auth_ldap', '__init__.py')
 version = parse_version_string(INIT_FILE)
 install_reqs, dep_links = fetch_requirements(REQUIREMENTS_FILE)
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 setup(
     name='st2-auth-ldap',
     version=version,
     description='StackStorm authentication backend for LDAP.',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     author='StackStorm, Inc.',
     author_email='info@stackstorm.com',
     url='https://stackstorm.com/',
@@ -46,6 +51,7 @@ setup(
         "Programming Language :: Python :: 3.11",
         'Environment :: Console',
     ],
+    python_requires='>=3.8',
     platforms=['Any'],
     scripts=[],
     provides=['st2auth_ldap'],
@@ -53,7 +59,6 @@ setup(
     include_package_data=True,
     install_requires=install_reqs,
     dependency_links=dep_links,
-    test_suite='tests',
     entry_points={
         'st2auth.backends.backend': [
             'ldap = st2auth_ldap.ldap_backend:LDAPAuthenticationBackend',

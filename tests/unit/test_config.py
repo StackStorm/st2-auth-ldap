@@ -16,7 +16,7 @@
 import ldap
 import os
 import mock
-import unittest2
+import unittest
 import uuid
 
 from st2auth_ldap import ldap_backend
@@ -36,7 +36,7 @@ LDAP_USER_PASSWD = 'snow123'
 LDAP_USER_BAD_PASSWD = 'snow1234'
 
 
-class LDAPBackendConfigurationTest(unittest2.TestCase):
+class LDAPBackendConfigurationTest(unittest.TestCase):
 
     def test_null_bind_dn(self):
         self.assertRaises(

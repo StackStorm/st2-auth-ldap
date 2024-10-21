@@ -16,17 +16,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version:
+        python-version:
           - "3.8"
           - "3.9"
           - "3.10"
           - "3.11"
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.version }}
+          python-version: ${{ matrix.python-version }}
 
       - name: Clone StackStorm/st2 repo
         run: |
@@ -39,8 +41,36 @@ jobs:
           sudo apt-get -y install python3-virtualenv
           make requirements
 
-      - name: Run lint and tests (Python ${{ matrix.version }})
+      - name: Run lint and tests (Python ${{ matrix.python-version }})
         run: |
           make .lint
           make .unit-tests
 
+  set_merge_ok:
+    name: Set Merge OK
+    if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    needs:
+    - build-and-test-python
+    outputs:
+      merge_ok: ${{ steps.set_merge_ok.outputs.merge_ok }}
+    runs-on: ubuntu-latest
+    steps:
+    - id: set_merge_ok
+      run: echo 'merge_ok=true' >> ${GITHUB_OUTPUT}
+
+  merge_ok:
+    name: Merge OK
+    if: always()
+    needs:
+    - set_merge_ok
+    runs-on: ubuntu-latest
+    steps:
+    - run: |
+        merge_ok="${{ needs.set_merge_ok.outputs.merge_ok }}"
+        if [[ "${merge_ok}" == "true" ]]; then
+          echo "Merge OK"
+          exit 0
+        else
+          echo "Merge NOT OK"
+          exit 1
+        fi
