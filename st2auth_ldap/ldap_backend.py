@@ -394,10 +394,11 @@ class LDAPAuthenticationBackend(object):
             additional_msg = ('user needs to be member of one or more of the following groups "%s" '
                               'for authentication to succeeed')
 
-        additional_msg = additional_msg % (str(list(required_groups)))
+        additional_msg = additional_msg % (str(list(sorted(required_groups))))
 
-        LOG.debug('Verifying user group membership using "%s" behavior (%s)' %
-                  (check_behavior, additional_msg))
+        LOG.debug(
+            f'Verifying user group membership using "{check_behavior}" behavior ({additional_msg})'
+        )
 
         # simple fully qualified DN match
         if (
@@ -409,10 +410,12 @@ class LDAPAuthenticationBackend(object):
         ):
             return True
 
-        msg = ('Unable to verify membership for user "%s (required_groups=%s,'
-               'actual_groups=%s,check_behavior=%s)".' % (username, str(required_groups),
-                                                          str(user_groups), check_behavior))
-        LOG.exception(msg)
+        LOG.exception(
+            f'Unable to verify membership for user "{username" '
+            f"(required_groups={list(sorted(required_groups))},"
+            f"actual_groups={list(sorted(norm_user_groups))},"
+            f"check_behavior={check_behavior})"
+        )
 
         # Final safe guard
         return False
