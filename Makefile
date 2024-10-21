@@ -121,7 +121,7 @@ unit-tests: requirements .clone_st2_repo .unit-tests
 	echo "==========================================================="; \
 	echo "Running unit tests"; \
 	echo "==========================================================="; \
-	. $(VIRTUALENV_DIR)/bin/activate; nosetests $(NOSE_OPTS) -s -v tests/unit || exit 1; \
+	. $(VIRTUALENV_DIR)/bin/activate; pytest tests/unit || exit 1; \
 
 .PHONY: .clone_st2_repo
 .clone_st2_repo:
