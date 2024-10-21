@@ -176,11 +176,8 @@ class LDAPAuthenticationBackend(object):
                                                         username=username)
 
                 # Assume group entries are not case sensitive.
-                user_groups = set([entry.lower() for entry in user_groups])
-                required_groups = set([entry.lower() for entry in self._group_dns])
-
                 result = self._verify_user_group_membership(username=username,
-                                                            required_groups=required_groups,
+                                                            required_groups=self._group_dns,
                                                             user_groups=user_groups,
                                                             check_behavior=self._group_dns_check)
                 if not result:
@@ -376,6 +373,9 @@ class LDAPAuthenticationBackend(object):
         Validate that the user is a member of required groups based on the check behavior defined
         in the config (and / or).
         """
+
+        user_groups = set([entry.lower() for entry in user_groups])
+        required_groups = set([entry.lower() for entry in required_groups])
 
         if check_behavior == 'and':
             additional_msg = ('user needs to be member of all the following groups "%s" for '
