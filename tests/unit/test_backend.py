@@ -126,7 +126,7 @@ def mock_ldap_search(mocker: MockerFixture, request: pytest.FixtureRequest) -> M
     )
 
 
-def test_instantaite_no_group_dns_provided():
+def test_instantiate_no_group_dns_provided():
     # User is member of two of the groups, but none of them are required
     required_group_dns = []
     expected_msg = "One or more user groups must be specified"
@@ -253,7 +253,7 @@ def test_authenticate_failure_bad_user_password(
 def test_authenticate_failure_non_group_member_no_groups(
     group_dns_check: str, mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
-    # User is not member of any of the required group
+    # User is not a member of any of the required groups
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -280,7 +280,7 @@ def test_authenticate_failure_non_group_member_no_groups(
     ),
     indirect=["mock_ldap_search"],
 )
-def test_authenticatefailure_non_group_member_non_required_group(
+def test_authenticate_failure_non_group_member_non_required_group(
     group_dns_check: str, mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
     # User is member of a group which is not required
@@ -458,7 +458,7 @@ def test_authenticate_and_is_default_behavior_non_group_member_of_all_required_g
 def test_authenticate_or_behavior_success_member_of_single_group_1(
     mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
-    # User is a memeber of single of possible required groups
+    # User is a member of single of possible required groups
     required_group_dns = ["cn=group1,dc=stackstorm,dc=net"]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -482,7 +482,7 @@ def test_authenticate_or_behavior_success_member_of_single_group_1(
 def test_authenticate_or_behavior_success_member_of_single_group_2(
     mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
-    # User is a memeber of single of possible required groups
+    # User is a member of single of possible required groups
     required_group_dns = [
         "cn=group1,dc=stackstorm,dc=net",
         "cn=group2,dc=stackstorm,dc=net",
@@ -511,7 +511,7 @@ def test_authenticate_or_behavior_success_member_of_single_group_2(
 def test_authenticate_or_behavior_success_member_of_single_group_2b(
     mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
-    # User is a memeber of single of possible required groups
+    # User is a member of single of possible required groups
     required_group_dns = [
         "cn=group1,dc=stackstorm,dc=net",
         "cn=group2,dc=stackstorm,dc=net",
@@ -548,7 +548,7 @@ def test_authenticate_or_behavior_success_member_of_single_group_2b(
 def test_authenticate_or_behavior_success_member_of_multiple_groups_1(
     mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
-    # User is a memeber of multiple of required groups
+    # User is a member of multiple of required groups
     required_group_dns = [
         "cn=group1,dc=stackstorm,dc=net",
         "cn=group2,dc=stackstorm,dc=net",
@@ -586,7 +586,7 @@ def test_authenticate_or_behavior_success_member_of_multiple_groups_1(
 def test_authenticate_or_behavior_success_member_of_multiple_groups_2(
     mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
-    # User is a memeber of multiple of required groups
+    # User is a member of multiple of required groups
     required_group_dns = [
         "cn=group1,dc=stackstorm,dc=net",
         "cn=group4,dc=stackstorm,dc=net",
@@ -622,7 +622,7 @@ def test_authenticate_or_behavior_success_member_of_multiple_groups_2(
 def test_authenticate_or_behavior_success_member_of_multiple_groups_3(
     mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
-    # User is a memeber of multiple of required groups
+    # User is a member of multiple of required groups
     required_group_dns = ["cn=group3,dc=stackstorm,dc=net"]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -655,7 +655,7 @@ def test_authenticate_or_behavior_success_member_of_multiple_groups_3(
 def test_authenticate_or_behavior_success_member_of_multiple_groups_3b(
     mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
-    # User is a memeber of multiple of required groups
+    # User is a member of multiple of required groups
     required_group_dns = [
         "cn=group3,dc=stackstorm,dc=net",
         "cn=group1,dc=stackstorm,dc=net",
@@ -832,7 +832,7 @@ def test_special_characters_in_username_are_escaped(
     mock_ldap_bind: MockType,
     mock_ldap_search: MockType,
 ):
-    # User is not member of any of the required group
+    # User is not a member of any of the required groups
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -1129,7 +1129,7 @@ def test_get_user_groups_specifying_group_pattern(
     ),
     indirect=True,
 )
-def test_get_groups_caching_no_cross_username_cache_polution(
+def test_get_groups_caching_no_cross_username_cache_pollution(
     mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
     required_group_dns = [
