@@ -24,58 +24,65 @@ import pytest
 from st2auth_ldap import ldap_backend
 
 
-LDAP_HOST = '127.0.0.1'
-LDAP_MULTIPLE_HOSTS = '127.0.0.1,localhost'
+LDAP_HOST = "127.0.0.1"
+LDAP_MULTIPLE_HOSTS = "127.0.0.1,localhost"
 LDAPS_PORT = 636
-LDAP_BIND_DN = 'cn=Administrator,cn=users,dc=stackstorm,dc=net'
+LDAP_BIND_DN = "cn=Administrator,cn=users,dc=stackstorm,dc=net"
 LDAP_BIND_PASSWORD = uuid.uuid4().hex
-LDAP_GROUP_DNS = ['cn=testers,dc=stackstorm,dc=net']
-LDAP_CACERT = '../fixtures/certs/cacert.pem'
-LDAP_CACERT_REAL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), LDAP_CACERT)
-LDAP_BASE_OU = 'dc=stackstorm,dc=net'
-LDAP_ID_ATTR = 'uid'
-LDAP_USER_UID = 'stanley'
-LDAP_USER_UID_2 = 'stanley_2'
-LDAP_USER_PASSWD = 'st@nl3y'
-LDAP_USER_BAD_PASSWD = 'badbot'
+LDAP_GROUP_DNS = ["cn=testers,dc=stackstorm,dc=net"]
+LDAP_CACERT = "../fixtures/certs/cacert.pem"
+LDAP_CACERT_REAL_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), LDAP_CACERT
+)
+LDAP_BASE_OU = "dc=stackstorm,dc=net"
+LDAP_ID_ATTR = "uid"
+LDAP_USER_UID = "stanley"
+LDAP_USER_UID_2 = "stanley_2"
+LDAP_USER_PASSWD = "st@nl3y"
+LDAP_USER_BAD_PASSWD = "badbot"
 
 LDAP_USER_INFO_DICT = {
-    'accountExpires': ['9223372036854775807'],
-    'badPasswordTime': ['0'],
-    'badPwdCount': ['0'],
-    'cn': ['Tomaz Muraus'],
-    'codePage': ['0'],
-    'countryCode': ['0'],
-    'displayName': ['Tomaz Muraus'],
-    'distinguishedName': ['CN=Tomaz Muraus,OU=stormers,DC=stackstorm,DC=net'],
-    'givenName': ['Tomaz'],
-    'instanceType': ['4'],
-    'lastLogoff': ['0'],
-    'lastLogon': ['131144315509626450'],
-    'lastLogonTimestamp': ['131326807618683640'],
-    'logonCount': ['0'],
-    'memberOf': ['CN=stormers,OU=groups,DC=stackstorm,DC=net',
-                 'CN=testers,OU=groups,DC=stackstorm,DC=net'],
-    'name': ['Tomaz Muraus'],
-    'objectCategory': ['CN=Person,CN=Schema,CN=Configuration,DC=stackstorm,DC=net'],
-    'objectClass': ['top', 'person', 'organizationalPerson', 'user'],
-    'objectGUID': ['\x1cR\xca\x12\x8a\xda\x8eL\xabe\xcfp\xda\x17H\xf7'],
-    'primaryGroupID': ['513'],
-    'pwdLastSet': ['131144314220000000'],
-    'sAMAccountName': ['tomaz'],
-    'sAMAccountType': ['805306368'],
-    'sn': ['Muraus'],
-    'uSNChanged': ['9835'],
-    'uSNCreated': ['3550'],
-    'userAccountControl': ['512'],
-    'userPrincipalName': ['tomaz@stackstorm.net'],
-    'whenChanged': ['20170227145241.0Z'],
-    'whenCreated': ['20160731093701.0Z']
+    "accountExpires": ["9223372036854775807"],
+    "badPasswordTime": ["0"],
+    "badPwdCount": ["0"],
+    "cn": ["Tomaz Muraus"],
+    "codePage": ["0"],
+    "countryCode": ["0"],
+    "displayName": ["Tomaz Muraus"],
+    "distinguishedName": ["CN=Tomaz Muraus,OU=stormers,DC=stackstorm,DC=net"],
+    "givenName": ["Tomaz"],
+    "instanceType": ["4"],
+    "lastLogoff": ["0"],
+    "lastLogon": ["131144315509626450"],
+    "lastLogonTimestamp": ["131326807618683640"],
+    "logonCount": ["0"],
+    "memberOf": [
+        "CN=stormers,OU=groups,DC=stackstorm,DC=net",
+        "CN=testers,OU=groups,DC=stackstorm,DC=net",
+    ],
+    "name": ["Tomaz Muraus"],
+    "objectCategory": ["CN=Person,CN=Schema,CN=Configuration,DC=stackstorm,DC=net"],
+    "objectClass": ["top", "person", "organizationalPerson", "user"],
+    "objectGUID": ["\x1cR\xca\x12\x8a\xda\x8eL\xabe\xcfp\xda\x17H\xf7"],
+    "primaryGroupID": ["513"],
+    "pwdLastSet": ["131144314220000000"],
+    "sAMAccountName": ["tomaz"],
+    "sAMAccountType": ["805306368"],
+    "sn": ["Muraus"],
+    "uSNChanged": ["9835"],
+    "uSNCreated": ["3550"],
+    "userAccountControl": ["512"],
+    "userPrincipalName": ["tomaz@stackstorm.net"],
+    "whenChanged": ["20170227145241.0Z"],
+    "whenCreated": ["20160731093701.0Z"],
 }
-LDAP_USER_SEARCH_RESULT = [('cn=Stormin Stanley,cn=users,dc=stackstorm,dc=net',
-                           LDAP_USER_INFO_DICT)]
-LDAP_GROUP_SEARCH_RESULT = [('cn=testers,dc=stackstorm,dc=net', ()),
-                            ('cn=stormers,dc=stackstorm,dc=net', ())]
+LDAP_USER_SEARCH_RESULT = [
+    ("cn=Stormin Stanley,cn=users,dc=stackstorm,dc=net", LDAP_USER_INFO_DICT)
+]
+LDAP_GROUP_SEARCH_RESULT = [
+    ("cn=testers,dc=stackstorm,dc=net", ()),
+    ("cn=stormers,dc=stackstorm,dc=net", ()),
+]
 
 
 def test_instantaite_no_group_dns_provided():
@@ -92,12 +99,15 @@ def test_instantaite_no_group_dns_provided():
             id_attr=LDAP_ID_ATTR,
         )
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]),
+)
 def test_authenticate():
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -105,18 +115,21 @@ def test_authenticate():
         LDAP_BASE_OU,
         LDAP_GROUP_DNS,
         LDAP_HOST,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_PASSWD)
     assert authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]),
+)
 def test_authenticate_with_multiple_ldap_hosts():
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -124,18 +137,21 @@ def test_authenticate_with_multiple_ldap_hosts():
         LDAP_BASE_OU,
         LDAP_GROUP_DNS,
         LDAP_MULTIPLE_HOSTS,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_PASSWD)
     assert authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]),
+)
 def test_authenticate_without_password():
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -143,15 +159,18 @@ def test_authenticate_without_password():
         LDAP_BASE_OU,
         LDAP_GROUP_DNS,
         LDAP_HOST,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     with pytest.raises(ValueError):
-        backend.authenticate(LDAP_USER_UID, '')
+        backend.authenticate(LDAP_USER_UID, "")
+
 
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(side_effect=Exception()))
+    ldap.ldapobject.SimpleLDAPObject,
+    "simple_bind_s",
+    mock.MagicMock(side_effect=Exception()),
+)
 def test_authenticate_failure_bad_bind_cred():
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -159,18 +178,23 @@ def test_authenticate_failure_bad_bind_cred():
         LDAP_BASE_OU,
         LDAP_GROUP_DNS,
         LDAP_HOST,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert not authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(side_effect=[None, Exception()]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "simple_bind_s",
+    mock.MagicMock(side_effect=[None, Exception()]),
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]),
+)
 def test_authenticate_failure_bad_user_password():
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -178,18 +202,21 @@ def test_authenticate_failure_bad_user_password():
         LDAP_BASE_OU,
         LDAP_GROUP_DNS,
         LDAP_HOST,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert not authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, []]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, []]),
+)
 def test_authenticate_failure_non_group_member_no_groups():
     # User is not member of any of the required group
     backend = ldap_backend.LDAPAuthenticationBackend(
@@ -199,7 +226,7 @@ def test_authenticate_failure_non_group_member_no_groups():
         LDAP_GROUP_DNS,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='and'
+        group_dns_check="and",
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
@@ -212,19 +239,23 @@ def test_authenticate_failure_non_group_member_no_groups():
         LDAP_GROUP_DNS,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='or'
+        group_dns_check="or",
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert not authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                   [('cn=group1,dc=stackstorm,dc=net', ())]]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[LDAP_USER_SEARCH_RESULT, [("cn=group1,dc=stackstorm,dc=net", ())]]
+    ),
+)
 def test_authenticatefailure_non_group_member_non_required_group():
     # User is member of a group which is not required
     backend = ldap_backend.LDAPAuthenticationBackend(
@@ -234,7 +265,7 @@ def test_authenticatefailure_non_group_member_non_required_group():
         LDAP_GROUP_DNS,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='and'
+        group_dns_check="and",
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
@@ -247,27 +278,36 @@ def test_authenticatefailure_non_group_member_non_required_group():
         LDAP_GROUP_DNS,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='or'
+        group_dns_check="or",
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert not authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group1,dc=stackstorm,dc=net', ()),
-                                 ('cn=group3,dc=stackstorm,dc=net', ())]]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[
+            LDAP_USER_SEARCH_RESULT,
+            [
+                ("cn=group1,dc=stackstorm,dc=net", ()),
+                ("cn=group3,dc=stackstorm,dc=net", ()),
+            ],
+        ]
+    ),
+)
 def test_authenticate_and_behavior_failure_non_group_member_of_all_required_groups_1():
     # User is member of two of the required groups (1 and 3) but not all three of them
     # (1, 2, 3)
     required_group_dns = [
-        'cn=group1,dc=stackstorm,dc=net',
-        'cn=group2,dc=stackstorm,dc=net',
-        'cn=group3,dc=stackstorm,dc=net',
+        "cn=group1,dc=stackstorm,dc=net",
+        "cn=group2,dc=stackstorm,dc=net",
+        "cn=group3,dc=stackstorm,dc=net",
     ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -276,25 +316,34 @@ def test_authenticate_and_behavior_failure_non_group_member_of_all_required_grou
         required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='and'
+        group_dns_check="and",
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert not authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group1,dc=stackstorm,dc=net', ()),
-                                 ('cn=group3,dc=stackstorm,dc=net', ())]]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[
+            LDAP_USER_SEARCH_RESULT,
+            [
+                ("cn=group1,dc=stackstorm,dc=net", ()),
+                ("cn=group3,dc=stackstorm,dc=net", ()),
+            ],
+        ]
+    ),
+)
 def test_authenticate_and_behavior_failure_non_group_member_of_all_required_groups_2():
     # User is member of two of the groups, but none of them are required
     required_group_dns = [
-        'cn=group7,dc=stackstorm,dc=net',
-        'cn=group8,dc=stackstorm,dc=net'
+        "cn=group7,dc=stackstorm,dc=net",
+        "cn=group8,dc=stackstorm,dc=net",
     ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -303,30 +352,39 @@ def test_authenticate_and_behavior_failure_non_group_member_of_all_required_grou
         required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='and'
+        group_dns_check="and",
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert not authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group1,dc=stackstorm,dc=net', ()),
-                                 ('cn=group2,dc=stackstorm,dc=net', ()),
-                                 ('cn=group3,dc=stackstorm,dc=net', ()),
-                                 ('cn=group4,dc=stackstorm,dc=net', ())]]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[
+            LDAP_USER_SEARCH_RESULT,
+            [
+                ("cn=group1,dc=stackstorm,dc=net", ()),
+                ("cn=group2,dc=stackstorm,dc=net", ()),
+                ("cn=group3,dc=stackstorm,dc=net", ()),
+                ("cn=group4,dc=stackstorm,dc=net", ()),
+            ],
+        ]
+    ),
+)
 def test_authenticate_and_behavior_failure_non_group_member_of_all_required_groups_3():
     # User is member of two of the required groups and two non-required, but not
     # all of the required groups
     required_group_dns = [
-        'cn=group1,dc=stackstorm,dc=net',
-        'cn=group2,dc=stackstorm,dc=net',
-        'cn=group5,dc=stackstorm,dc=net',
-        'cn=group6,dc=stackstorm,dc=net',
+        "cn=group1,dc=stackstorm,dc=net",
+        "cn=group2,dc=stackstorm,dc=net",
+        "cn=group5,dc=stackstorm,dc=net",
+        "cn=group6,dc=stackstorm,dc=net",
     ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -335,31 +393,40 @@ def test_authenticate_and_behavior_failure_non_group_member_of_all_required_grou
         required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='and'
+        group_dns_check="and",
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert not authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group1,dc=stackstorm,dc=net', ()),
-                                 ('cn=group2,dc=stackstorm,dc=net', ()),
-                                 ('cn=group3,dc=stackstorm,dc=net', ()),
-                                 ('cn=group4,dc=stackstorm,dc=net', ())]]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[
+            LDAP_USER_SEARCH_RESULT,
+            [
+                ("cn=group1,dc=stackstorm,dc=net", ()),
+                ("cn=group2,dc=stackstorm,dc=net", ()),
+                ("cn=group3,dc=stackstorm,dc=net", ()),
+                ("cn=group4,dc=stackstorm,dc=net", ()),
+            ],
+        ]
+    ),
+)
 def test_authenticate_and_is_default_behavior_non_group_member_of_all_required_groups():
     # User is member of two of the required groups and two non-required, but not
     # all of the required groups
     # Verify "and" is a default group_dns_check_behavior
     required_group_dns = [
-        'cn=group1,dc=stackstorm,dc=net',
-        'cn=group2,dc=stackstorm,dc=net',
-        'cn=group5,dc=stackstorm,dc=net',
-        'cn=group6,dc=stackstorm,dc=net',
+        "cn=group1,dc=stackstorm,dc=net",
+        "cn=group2,dc=stackstorm,dc=net",
+        "cn=group5,dc=stackstorm,dc=net",
+        "cn=group6,dc=stackstorm,dc=net",
     ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -367,24 +434,26 @@ def test_authenticate_and_is_default_behavior_non_group_member_of_all_required_g
         LDAP_BASE_OU,
         required_group_dns,
         LDAP_HOST,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert not authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group1,dc=stackstorm,dc=net', ())]]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[LDAP_USER_SEARCH_RESULT, [("cn=group1,dc=stackstorm,dc=net", ())]]
+    ),
+)
 def test_authenticate_or_behavior_success_member_of_single_group_1():
     # User is a memeber of single of possible required groups
-    required_group_dns = [
-        'cn=group1,dc=stackstorm,dc=net'
-    ]
+    required_group_dns = ["cn=group1,dc=stackstorm,dc=net"]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -392,26 +461,30 @@ def test_authenticate_or_behavior_success_member_of_single_group_1():
         required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='or'
+        group_dns_check="or",
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group1,dc=stackstorm,dc=net', ())]]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[LDAP_USER_SEARCH_RESULT, [("cn=group1,dc=stackstorm,dc=net", ())]]
+    ),
+)
 def test_authenticate_or_behavior_success_member_of_single_group_2():
     # User is a memeber of single of possible required groups
     required_group_dns = [
-        'cn=group1,dc=stackstorm,dc=net',
-        'cn=group2,dc=stackstorm,dc=net',
-        'cn=group3,dc=stackstorm,dc=net',
-        'cn=group4,dc=stackstorm,dc=net'
+        "cn=group1,dc=stackstorm,dc=net",
+        "cn=group2,dc=stackstorm,dc=net",
+        "cn=group3,dc=stackstorm,dc=net",
+        "cn=group4,dc=stackstorm,dc=net",
     ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -420,26 +493,30 @@ def test_authenticate_or_behavior_success_member_of_single_group_2():
         required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='or'
+        group_dns_check="or",
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group3,dc=stackstorm,dc=net', ())]]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[LDAP_USER_SEARCH_RESULT, [("cn=group3,dc=stackstorm,dc=net", ())]]
+    ),
+)
 def test_authenticate_or_behavior_success_member_of_single_group_2b():
     # User is a memeber of single of possible required groups
     required_group_dns = [
-        'cn=group1,dc=stackstorm,dc=net',
-        'cn=group2,dc=stackstorm,dc=net',
-        'cn=group3,dc=stackstorm,dc=net',
-        'cn=group4,dc=stackstorm,dc=net'
+        "cn=group1,dc=stackstorm,dc=net",
+        "cn=group2,dc=stackstorm,dc=net",
+        "cn=group3,dc=stackstorm,dc=net",
+        "cn=group4,dc=stackstorm,dc=net",
     ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -448,28 +525,37 @@ def test_authenticate_or_behavior_success_member_of_single_group_2b():
         required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='or'
+        group_dns_check="or",
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group1,dc=stackstorm,dc=net', ()),
-                                 ('cn=group4,dc=stackstorm,dc=net', ())]]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[
+            LDAP_USER_SEARCH_RESULT,
+            [
+                ("cn=group1,dc=stackstorm,dc=net", ()),
+                ("cn=group4,dc=stackstorm,dc=net", ()),
+            ],
+        ]
+    ),
+)
 def test_authenticate_or_behavior_success_member_of_multiple_groups_1():
     # User is a memeber of multiple of required groups
     required_group_dns = [
-        'cn=group1,dc=stackstorm,dc=net',
-        'cn=group2,dc=stackstorm,dc=net',
-        'cn=group3,dc=stackstorm,dc=net',
-        'cn=group4,dc=stackstorm,dc=net',
-        'cn=group5,dc=stackstorm,dc=net'
+        "cn=group1,dc=stackstorm,dc=net",
+        "cn=group2,dc=stackstorm,dc=net",
+        "cn=group3,dc=stackstorm,dc=net",
+        "cn=group4,dc=stackstorm,dc=net",
+        "cn=group5,dc=stackstorm,dc=net",
     ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -478,25 +564,34 @@ def test_authenticate_or_behavior_success_member_of_multiple_groups_1():
         required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='or'
+        group_dns_check="or",
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group1,dc=stackstorm,dc=net', ()),
-                                 ('cn=group4,dc=stackstorm,dc=net', ())]]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[
+            LDAP_USER_SEARCH_RESULT,
+            [
+                ("cn=group1,dc=stackstorm,dc=net", ()),
+                ("cn=group4,dc=stackstorm,dc=net", ()),
+            ],
+        ]
+    ),
+)
 def test_authenticate_or_behavior_success_member_of_multiple_groups_2():
     # User is a memeber of multiple of required groups
     required_group_dns = [
-        'cn=group1,dc=stackstorm,dc=net',
-        'cn=group4,dc=stackstorm,dc=net'
+        "cn=group1,dc=stackstorm,dc=net",
+        "cn=group4,dc=stackstorm,dc=net",
     ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -505,26 +600,33 @@ def test_authenticate_or_behavior_success_member_of_multiple_groups_2():
         required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='or'
+        group_dns_check="or",
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group1,dc=stackstorm,dc=net', ()),
-                                 ('cn=group3,dc=stackstorm,dc=net', ()),
-                                 ('cn=group6,dc=stackstorm,dc=net', ())]]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[
+            LDAP_USER_SEARCH_RESULT,
+            [
+                ("cn=group1,dc=stackstorm,dc=net", ()),
+                ("cn=group3,dc=stackstorm,dc=net", ()),
+                ("cn=group6,dc=stackstorm,dc=net", ()),
+            ],
+        ]
+    ),
+)
 def test_authenticate_or_behavior_success_member_of_multiple_groups_3():
     # User is a memeber of multiple of required groups
-    required_group_dns = [
-        'cn=group3,dc=stackstorm,dc=net'
-    ]
+    required_group_dns = ["cn=group3,dc=stackstorm,dc=net"]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -532,26 +634,35 @@ def test_authenticate_or_behavior_success_member_of_multiple_groups_3():
         required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='or'
+        group_dns_check="or",
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group1,dc=stackstorm,dc=net', ()),
-                                 ('cn=group3,dc=stackstorm,dc=net', ()),
-                                 ('cn=group6,dc=stackstorm,dc=net', ())]]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[
+            LDAP_USER_SEARCH_RESULT,
+            [
+                ("cn=group1,dc=stackstorm,dc=net", ()),
+                ("cn=group3,dc=stackstorm,dc=net", ()),
+                ("cn=group6,dc=stackstorm,dc=net", ()),
+            ],
+        ]
+    ),
+)
 def test_authenticate_or_behavior_success_member_of_multiple_groups_3b():
     # User is a memeber of multiple of required groups
     required_group_dns = [
-        'cn=group3,dc=stackstorm,dc=net',
-        'cn=group1,dc=stackstorm,dc=net'
+        "cn=group3,dc=stackstorm,dc=net",
+        "cn=group1,dc=stackstorm,dc=net",
     ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -560,18 +671,21 @@ def test_authenticate_or_behavior_success_member_of_multiple_groups_3b():
         required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='or'
+        group_dns_check="or",
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]),
+)
 def test_ssl_authenticate():
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -581,18 +695,23 @@ def test_ssl_authenticate():
         LDAP_HOST,
         port=LDAPS_PORT,
         use_ssl=True,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_PASSWD)
     assert authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(side_effect=[None, Exception()]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "simple_bind_s",
+    mock.MagicMock(side_effect=[None, Exception()]),
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]),
+)
 def test_ssl_authenticate_failure():
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -602,18 +721,21 @@ def test_ssl_authenticate_failure():
         LDAP_HOST,
         port=LDAPS_PORT,
         use_ssl=True,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert not authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]),
+)
 def test_ssl_authenticate_validate_cert():
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -624,21 +746,24 @@ def test_ssl_authenticate_validate_cert():
         port=LDAPS_PORT,
         use_ssl=True,
         cacert=LDAP_CACERT_REAL_PATH,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_PASSWD)
     assert authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'start_tls_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "start_tls_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]),
+)
 def test_tls_authenticate():
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -647,21 +772,26 @@ def test_tls_authenticate():
         LDAP_GROUP_DNS,
         LDAP_HOST,
         use_tls=True,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_PASSWD)
     assert authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'start_tls_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "start_tls_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(side_effect=[None, Exception()]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "simple_bind_s",
+    mock.MagicMock(side_effect=[None, Exception()]),
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]),
+)
 def test_tls_authenticate_failure():
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -670,21 +800,24 @@ def test_tls_authenticate_failure():
         LDAP_GROUP_DNS,
         LDAP_HOST,
         use_tls=True,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_BAD_PASSWD)
     assert not authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'start_tls_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "start_tls_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]),
+)
 def test_tls_authenticate_validate_cert():
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -694,18 +827,21 @@ def test_tls_authenticate_validate_cert():
         LDAP_HOST,
         use_tls=True,
         cacert=LDAP_CACERT_REAL_PATH,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     authenticated = backend.authenticate(LDAP_USER_UID, LDAP_USER_PASSWD)
     assert authenticated
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, []]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, []]),
+)
 def test_special_characters_in_username_are_escaped():
     # User is not member of any of the required group
     backend = ldap_backend.LDAPAuthenticationBackend(
@@ -714,16 +850,16 @@ def test_special_characters_in_username_are_escaped():
         LDAP_BASE_OU,
         LDAP_GROUP_DNS,
         LDAP_HOST,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     values = [
-        ('stanleyA', 'stanleyA'),
-        ('stanley!@?.,&', 'stanley!@?.,&'),
+        ("stanleyA", "stanleyA"),
+        ("stanley!@?.,&", "stanley!@?.,&"),
         # Special characters () should be escaped
-        ('(stanley)', '\\28stanley\\29'),
+        ("(stanley)", "\\28stanley\\29"),
         # Special characters () should be escaped
-        ('(stanley=)', '\\28stanley=\\29'),
+        ("(stanley=)", "\\28stanley=\\29"),
     ]
 
     for actual_username, expected_username in values:
@@ -741,14 +877,18 @@ def test_special_characters_in_username_are_escaped():
         assert f"(memberUid={expected_username})" in filter_call_value
 
         ldap.ldapobject.SimpleLDAPObject.search_s = mock.MagicMock(
-            side_effect=[LDAP_USER_SEARCH_RESULT, []])
+            side_effect=[LDAP_USER_SEARCH_RESULT, []]
+        )
+
 
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]),
+)
 def test_get_user():
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -756,21 +896,24 @@ def test_get_user():
         LDAP_BASE_OU,
         LDAP_GROUP_DNS,
         LDAP_HOST,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     user_info = backend.get_user(username=LDAP_USER_UID)
-    assert user_info['cn'] == ['Tomaz Muraus']
-    assert user_info['displayName'] == ['Tomaz Muraus']
-    assert user_info['givenName'] == ['Tomaz']
-    assert user_info['primaryGroupID'] == ['513']
+    assert user_info["cn"] == ["Tomaz Muraus"]
+    assert user_info["displayName"] == ["Tomaz Muraus"]
+    assert user_info["givenName"] == ["Tomaz"]
+    assert user_info["primaryGroupID"] == ["513"]
+
 
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[2 * LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[2 * LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]),
+)
 def test_get_user_multiple_results():
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -778,18 +921,21 @@ def test_get_user_multiple_results():
         LDAP_BASE_OU,
         LDAP_GROUP_DNS,
         LDAP_HOST,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
     user_info = backend.get_user(username=LDAP_USER_UID)
     assert user_info is None
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT]),
+)
 def test_get_user_groups():
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -797,31 +943,32 @@ def test_get_user_groups():
         LDAP_BASE_OU,
         LDAP_GROUP_DNS,
         LDAP_HOST,
-        id_attr=LDAP_ID_ATTR
+        id_attr=LDAP_ID_ATTR,
     )
 
-    expected = [
-        'cn=testers,dc=stackstorm,dc=net',
-        'cn=stormers,dc=stackstorm,dc=net'
-    ]
+    expected = ["cn=testers,dc=stackstorm,dc=net", "cn=stormers,dc=stackstorm,dc=net"]
 
     groups = backend.get_user_groups(username=LDAP_USER_UID)
     assert groups == expected
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group1,dc=stackstorm,dc=net', ())],
-                                LDAP_USER_SEARCH_RESULT,
-                                [('cn=group1,dc=stackstorm,dc=net', ())]
-                                ]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[
+            LDAP_USER_SEARCH_RESULT,
+            [("cn=group1,dc=stackstorm,dc=net", ())],
+            LDAP_USER_SEARCH_RESULT,
+            [("cn=group1,dc=stackstorm,dc=net", ())],
+        ]
+    ),
+)
 def test_authenticate_and_get_user_groups_caching_disabled():
-    required_group_dns = [
-        'cn=group1,dc=stackstorm,dc=net'
-    ]
+    required_group_dns = ["cn=group1,dc=stackstorm,dc=net"]
 
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -830,8 +977,8 @@ def test_authenticate_and_get_user_groups_caching_disabled():
         required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='or',
-        cache_user_groups_response=False
+        group_dns_check="or",
+        cache_user_groups_response=False,
     )
 
     assert ldap.ldapobject.SimpleLDAPObject.search_s.call_count == 0
@@ -843,24 +990,28 @@ def test_authenticate_and_get_user_groups_caching_disabled():
     assert ldap.ldapobject.SimpleLDAPObject.search_s.call_count == 2
 
     user_groups = backend.get_user_groups(username=LDAP_USER_UID)
-    assert user_groups == ['cn=group1,dc=stackstorm,dc=net']
+    assert user_groups == ["cn=group1,dc=stackstorm,dc=net"]
     assert ldap.ldapobject.SimpleLDAPObject.search_s.call_count == 4
     assert backend._user_groups_cache is None
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group1,dc=stackstorm,dc=net', ())],
-                                LDAP_USER_SEARCH_RESULT,
-                                [('cn=group1,dc=stackstorm,dc=net', ())]
-                                ]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[
+            LDAP_USER_SEARCH_RESULT,
+            [("cn=group1,dc=stackstorm,dc=net", ())],
+            LDAP_USER_SEARCH_RESULT,
+            [("cn=group1,dc=stackstorm,dc=net", ())],
+        ]
+    ),
+)
 def test_authenticate_and_get_user_groups_caching_enabled():
-    required_group_dns = [
-        'cn=group1,dc=stackstorm,dc=net'
-    ]
+    required_group_dns = ["cn=group1,dc=stackstorm,dc=net"]
 
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -869,8 +1020,8 @@ def test_authenticate_and_get_user_groups_caching_enabled():
         required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='or',
-        cache_user_groups_response=True
+        group_dns_check="or",
+        cache_user_groups_response=True,
     )
 
     assert ldap.ldapobject.SimpleLDAPObject.search_s.call_count == 0
@@ -880,26 +1031,29 @@ def test_authenticate_and_get_user_groups_caching_enabled():
     assert ldap.ldapobject.SimpleLDAPObject.search_s.call_count == 2
 
     user_groups = backend.get_user_groups(username=LDAP_USER_UID)
-    assert user_groups == ['cn=group1,dc=stackstorm,dc=net']
+    assert user_groups == ["cn=group1,dc=stackstorm,dc=net"]
     assert ldap.ldapobject.SimpleLDAPObject.search_s.call_count == 2
     assert LDAP_USER_UID in backend._user_groups_cache
 
+
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT]),
+)
 def test_get_user_specifying_account_pattern():
-    expected_username = 'unique_username_1'
+    expected_username = "unique_username_1"
     required_group_dns = [
-        'cn=group3,dc=stackstorm,dc=net',
-        'cn=group4,dc=stackstorm,dc=net'
+        "cn=group3,dc=stackstorm,dc=net",
+        "cn=group4,dc=stackstorm,dc=net",
     ]
-    scope = 'subtree'
+    scope = "subtree"
     scope_number = ldap_backend.SEARCH_SCOPES[scope]
 
-    account_pattern = '''
+    account_pattern = """
     (&
       (objectClass=person)
       (|
@@ -907,7 +1061,11 @@ def test_get_user_specifying_account_pattern():
         (mail={username})
       )
     )
-    '''.replace('\n', '').replace(' ', '')
+    """.replace(
+        "\n", ""
+    ).replace(
+        " ", ""
+    )
     expected_account_pattern = account_pattern.format(username=expected_username)
 
     backend = ldap_backend.LDAPAuthenticationBackend(
@@ -923,30 +1081,37 @@ def test_get_user_specifying_account_pattern():
     backend._init_connection = mock.MagicMock(return_value=connection)
     backend.get_user(expected_username)
 
-    connection.search_s.assert_called_once_with(LDAP_BASE_OU, scope_number,
-                                                expected_account_pattern, [])
+    connection.search_s.assert_called_once_with(
+        LDAP_BASE_OU, scope_number, expected_account_pattern, []
+    )
+
 
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group3,dc=stackstorm,dc=net', ())],
-                                LDAP_USER_SEARCH_RESULT,
-                                [('cn=group4,dc=stackstorm,dc=net', ())]
-                                ]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[
+            LDAP_USER_SEARCH_RESULT,
+            [("cn=group3,dc=stackstorm,dc=net", ())],
+            LDAP_USER_SEARCH_RESULT,
+            [("cn=group4,dc=stackstorm,dc=net", ())],
+        ]
+    ),
+)
 def test_get_user_groups_specifying_group_pattern():
-    expected_user_dn = 'unique_userdn_1'
-    expected_username = 'unique_username_2'
+    expected_user_dn = "unique_userdn_1"
+    expected_username = "unique_username_2"
     required_group_dns = [
-        'cn=group3,dc=stackstorm,dc=net',
-        'cn=group4,dc=stackstorm,dc=net'
+        "cn=group3,dc=stackstorm,dc=net",
+        "cn=group4,dc=stackstorm,dc=net",
     ]
-    scope = 'subtree'
+    scope = "subtree"
     scope_number = ldap_backend.SEARCH_SCOPES[scope]
 
-    group_pattern = '''
+    group_pattern = """
     (|
       (&
         (objectClass=group)
@@ -958,7 +1123,11 @@ def test_get_user_groups_specifying_group_pattern():
         )
       )
     )
-    '''.replace('\n', '').replace(' ', '')
+    """.replace(
+        "\n", ""
+    ).replace(
+        " ", ""
+    )
     expected_group_pattern = group_pattern.format(
         user_dn=expected_user_dn,
         username=expected_username,
@@ -979,23 +1148,30 @@ def test_get_user_groups_specifying_group_pattern():
     backend._get_user_dn = mock.MagicMock(return_value=expected_user_dn)
 
     backend.get_user_groups(expected_username)
-    connection.search_s.assert_called_with(LDAP_BASE_OU, scope_number,
-                                           expected_group_pattern, [])
+    connection.search_s.assert_called_with(
+        LDAP_BASE_OU, scope_number, expected_group_pattern, []
+    )
+
 
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group3,dc=stackstorm,dc=net', ())],
-                                LDAP_USER_SEARCH_RESULT,
-                                [('cn=group4,dc=stackstorm,dc=net', ())]
-                                ]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[
+            LDAP_USER_SEARCH_RESULT,
+            [("cn=group3,dc=stackstorm,dc=net", ())],
+            LDAP_USER_SEARCH_RESULT,
+            [("cn=group4,dc=stackstorm,dc=net", ())],
+        ]
+    ),
+)
 def test_get_groups_caching_no_cross_username_cache_polution():
     required_group_dns = [
-        'cn=group3,dc=stackstorm,dc=net',
-        'cn=group4,dc=stackstorm,dc=net'
+        "cn=group3,dc=stackstorm,dc=net",
+        "cn=group4,dc=stackstorm,dc=net",
     ]
     # Test which verifies that cache items are correctly scoped per username
     backend = ldap_backend.LDAPAuthenticationBackend(
@@ -1005,31 +1181,41 @@ def test_get_groups_caching_no_cross_username_cache_polution():
         required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='or',
-        cache_user_groups_response=True
+        group_dns_check="or",
+        cache_user_groups_response=True,
     )
     user_groups = backend.get_user_groups(username=LDAP_USER_UID)
-    assert user_groups == ['cn=group3,dc=stackstorm,dc=net']
-    assert backend._user_groups_cache[LDAP_USER_UID] == ['cn=group3,dc=stackstorm,dc=net']
+    assert user_groups == ["cn=group3,dc=stackstorm,dc=net"]
+    assert backend._user_groups_cache[LDAP_USER_UID] == [
+        "cn=group3,dc=stackstorm,dc=net"
+    ]
 
     user_groups = backend.get_user_groups(username=LDAP_USER_UID_2)
-    assert user_groups == ['cn=group4,dc=stackstorm,dc=net']
-    assert backend._user_groups_cache[LDAP_USER_UID_2] == ['cn=group4,dc=stackstorm,dc=net']
+    assert user_groups == ["cn=group4,dc=stackstorm,dc=net"]
+    assert backend._user_groups_cache[LDAP_USER_UID_2] == [
+        "cn=group4,dc=stackstorm,dc=net"
+    ]
+
 
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'simple_bind_s',
-    mock.MagicMock(return_value=None))
+    ldap.ldapobject.SimpleLDAPObject, "simple_bind_s", mock.MagicMock(return_value=None)
+)
 @mock.patch.object(
-    ldap.ldapobject.SimpleLDAPObject, 'search_s',
-    mock.MagicMock(side_effect=[LDAP_USER_SEARCH_RESULT,
-                                [('cn=group3,dc=stackstorm,dc=net', ())],
-                                LDAP_USER_SEARCH_RESULT,
-                                [('cn=group4,dc=stackstorm,dc=net', ())]
-                                ]))
+    ldap.ldapobject.SimpleLDAPObject,
+    "search_s",
+    mock.MagicMock(
+        side_effect=[
+            LDAP_USER_SEARCH_RESULT,
+            [("cn=group3,dc=stackstorm,dc=net", ())],
+            LDAP_USER_SEARCH_RESULT,
+            [("cn=group4,dc=stackstorm,dc=net", ())],
+        ]
+    ),
+)
 def test_get_groups_caching_cache_ttl():
     required_group_dns = [
-        'cn=group3,dc=stackstorm,dc=net',
-        'cn=group4,dc=stackstorm,dc=net'
+        "cn=group3,dc=stackstorm,dc=net",
+        "cn=group4,dc=stackstorm,dc=net",
     ]
 
     backend = ldap_backend.LDAPAuthenticationBackend(
@@ -1039,23 +1225,27 @@ def test_get_groups_caching_cache_ttl():
         required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
-        group_dns_check='or',
+        group_dns_check="or",
         cache_user_groups_response=True,
-        cache_user_groups_cache_ttl=1
+        cache_user_groups_cache_ttl=1,
     )
     user_groups = backend.get_user_groups(username=LDAP_USER_UID)
-    assert user_groups == ['cn=group3,dc=stackstorm,dc=net']
+    assert user_groups == ["cn=group3,dc=stackstorm,dc=net"]
     assert LDAP_USER_UID in backend._user_groups_cache
-    assert backend._user_groups_cache[LDAP_USER_UID] == ['cn=group3,dc=stackstorm,dc=net']
+    assert backend._user_groups_cache[LDAP_USER_UID] == [
+        "cn=group3,dc=stackstorm,dc=net"
+    ]
 
     # After 1 second, cache entry should expire and it should result in another search_s call
     # which returns group4
     time.sleep(1.5)
 
     user_groups = backend.get_user_groups(username=LDAP_USER_UID)
-    assert user_groups == ['cn=group4,dc=stackstorm,dc=net']
+    assert user_groups == ["cn=group4,dc=stackstorm,dc=net"]
     assert LDAP_USER_UID in backend._user_groups_cache
-    assert backend._user_groups_cache[LDAP_USER_UID] == ['cn=group4,dc=stackstorm,dc=net']
+    assert backend._user_groups_cache[LDAP_USER_UID] == [
+        "cn=group4,dc=stackstorm,dc=net"
+    ]
 
     # Cache should now be empty
     time.sleep(1.5)
