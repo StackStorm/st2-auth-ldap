@@ -20,6 +20,8 @@ from __future__ import absolute_import
 import os
 import logging
 
+from typing import List, Set, Tuple
+
 import ldap
 import ldap.dn
 import ldap.filter
@@ -134,6 +136,7 @@ class LDAPAuthenticationBackend(object):
 
         self._group_dns_check = group_dns_check
         self._group_dns = self._normalize_group_dns(group_dns)
+        self._group_dns_are_fqdns = all(len(dn) > 1 for dn in self._group_dns)
 
         self._cache_user_groups_response = cache_user_groups_response
         self._cache_user_groups_cache_ttl = int(cache_user_groups_cache_ttl)
@@ -175,12 +178,12 @@ class LDAPAuthenticationBackend(object):
             try:
                 user_groups = self._get_groups_for_user(connection=connection, user_dn=user_dn,
                                                         username=username)
+                user_group_dns = self._normalize_group_dns(user_groups)
 
-                # Assume group entries are not case sensitive.
-                result = self._verify_user_group_membership(username=username,
-                                                            required_groups=self._group_dns,
-                                                            user_groups=user_groups,
-                                                            check_behavior=self._group_dns_check)
+                result = self._verify_user_group_membership(
+                    username=username,
+                    user_group_dns=user_group_dns,
+                )
                 if not result:
                     return False
             except Exception:
@@ -369,27 +372,33 @@ class LDAPAuthenticationBackend(object):
         return groups
 
     @staticmethod
-    def _normalize_group_dns(groups: List[str]) -> Set[str]:
-        """Normalize group DNs by lowercasing and parsing to strip spaces."""
+    def _normalize_group_dns(groups: List[str]) -> Set[Tuple[str]]:
+        """Normalize group DNs by lowercasing and parsing into RDN parts.
+
+        Assumes group entries are not case sensitive.
+        Returns a set of tuples of "type=value" strings.
+        """
         return {
-            ldap.dn.dn2str(
-                ldap.dn.str2dn(group.lower(), flags=ldap.DN_FORMAT_LDAPV3)
-            ) for group in groups
+            tuple(ldap.dn.explode_dn(group.lower(), flags=ldap.DN_FORMAT_LDAPV3))
+            for group in groups
         }
+
+    @staticmethod
+    def _str_dns(dns: Set[Tuple[str]]) -> str:
+        return str(list(','.join(dn) for dn in sorted(dns)))
 
     def _verify_user_group_membership(
         self,
         username: str,
-        required_groups: Set[str],
-        user_groups: List[str],
-        check_behavior: str = "and",
+        user_group_dns: Set[Tuple[str]],
     ):
         """
         Validate that the user is a member of required groups based on the check behavior defined
         in the config (and / or).
         """
-
-        norm_user_groups = self._normalize_group_dns(user_groups)
+        required_group_dns = self._group_dns
+        check_behavior = self._group_dns_check # default: "and"
+        use_fqdns = self._group_dns_are_fqdns
 
         if check_behavior == 'and':
             additional_msg = ('user needs to be member of all the following groups "%s" for '
@@ -398,26 +407,46 @@ class LDAPAuthenticationBackend(object):
             additional_msg = ('user needs to be member of one or more of the following groups "%s" '
                               'for authentication to succeeed')
 
-        additional_msg = additional_msg % (str(list(sorted(required_groups))))
+        additional_msg = additional_msg % self._str_dns(required_group_dns)
 
         LOG.debug(
             f'Verifying user group membership using "{check_behavior}" behavior ({additional_msg})'
         )
 
-        # simple fully qualified DN match
         if (
-            check_behavior == 'and'
-            and required_groups.issubset(norm_user_groups)
+            use_fqdns
+            and check_behavior == 'and'
+            and required_group_dns.issubset(norm_user_groups)
         ) or (
-            check_behavior == 'or'
-            and required_groups.intersection(norm_user_groups)
+            use_fqdns
+            and check_behavior == 'or'
+            and required_group_dns.intersection(norm_user_groups)
         ):
+            # simple fully qualified DN(s) matched
             return True
+        elif not use_fqdns:
+            user_group_rdns = {
+                (group_dn[0],) for group_dn in user_group_dns
+            }
+            #need to check each required DN for RDN
+            for group_dn in required_group_dns:
+                has_group = False
+                if len(group_dn) == 1:
+                    if group_dn in user_group_rdns:
+                        has_group = True
+                else:
+                    if group_dn in user_group_dns:
+                        has_group = True
+                if check_behavior == 'or' and has_group:
+                    return True
+                if check_behavior == 'and' and not has_group:
+                    # missing a required group, no need to check more groups.
+                    break
 
         LOG.exception(
-            f'Unable to verify membership for user "{username" '
-            f"(required_groups={list(sorted(required_groups))},"
-            f"actual_groups={list(sorted(norm_user_groups))},"
+            f'Unable to verify membership for user "{username}" '
+            f"(required_groups={self._str_dns(required_group_dns)},"
+            f"actual_groups={self._str_dns(user_group_dns)},"
             f"check_behavior={check_behavior})"
         )
 
