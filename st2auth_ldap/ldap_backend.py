@@ -397,7 +397,7 @@ class LDAPAuthenticationBackend(object):
         in the config (and / or).
         """
         required_group_dns = self._group_dns
-        check_behavior = self._group_dns_check # default: "and"
+        check_behavior = self._group_dns_check  # default: "and"
         use_fqdns = self._group_dns_are_fqdns
 
         if check_behavior == 'and':
@@ -414,21 +414,19 @@ class LDAPAuthenticationBackend(object):
         )
 
         if (
-            use_fqdns
-            and check_behavior == 'and'
-            and required_group_dns.issubset(norm_user_groups)
+            use_fqdns and
+            check_behavior == 'and' and
+            required_group_dns.issubset(user_group_dns)
         ) or (
-            use_fqdns
-            and check_behavior == 'or'
-            and required_group_dns.intersection(norm_user_groups)
+            use_fqdns and
+            check_behavior == 'or' and
+            required_group_dns.intersection(user_group_dns)
         ):
             # simple fully qualified DN(s) matched
             return True
         elif not use_fqdns:
-            user_group_rdns = {
-                (group_dn[0],) for group_dn in user_group_dns
-            }
-            #need to check each required DN for RDN
+            user_group_rdns = {(group_dn[0],) for group_dn in user_group_dns}
+            # need to check each required DN for RDN
             for group_dn in required_group_dns:
                 has_group = False
                 if len(group_dn) == 1:
