@@ -187,6 +187,10 @@ logging = /path/to/st2auth.logging.conf
 api_url = http://myhost.example.com:9101/
 ```
 
+Note: groups, like users, are objects in LDAP. Groups are not the same as the `OU` (Organizational Unit) "folders" that you can see in DNs.
+To login, users must be members of all groups--identified by their `DN` or `RDN`--in the `base_dns` option (assuming `group_dns_check` is `and`).
+If `group_dns_check` is `or`, then the user only needs to be in one of the required groups, not all of them.
+
 #### Explanation
 
 In this example, the `group_dns` option has the RDNs `CN=st2users` and `CN=st2developers` instead of the fully qualified DNs `CN=st2users,ou=groups,dc=example,dc=com` and `CN=st2developers,ou=groups,dc=example,dc=com`.
