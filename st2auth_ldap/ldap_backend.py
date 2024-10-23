@@ -427,19 +427,21 @@ class LDAPAuthenticationBackend(object):
         elif not use_fqdns:
             user_group_rdns = {(group_dn[0],) for group_dn in user_group_dns}
             # need to check each required DN for RDN
+            found_groups = 0
             for group_dn in required_group_dns:
-                has_group = False
                 if len(group_dn) == 1:
-                    if group_dn in user_group_rdns:
-                        has_group = True
+                    has_group = group_dn in user_group_rdns
                 else:
-                    if group_dn in user_group_dns:
-                        has_group = True
+                    has_group = group_dn in user_group_dns
                 if check_behavior == 'or' and has_group:
                     return True
-                if check_behavior == 'and' and not has_group:
-                    # missing a required group, no need to check more groups.
-                    break
+                if check_behavior == 'and':
+                    if not has_group:
+                        # missing a required group, no need to check more groups.
+                        break
+                    found_groups += 1
+            if check_behavior == 'and' and found_groups == len(required_group_dns):
+                return True
 
         LOG.exception(
             f'Unable to verify membership for user "{username}" '
