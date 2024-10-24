@@ -16,6 +16,7 @@
 import os
 import time
 import uuid
+from typing import List
 
 import ldap
 import pytest
@@ -30,6 +31,11 @@ LDAPS_PORT = 636
 LDAP_BIND_DN = "cn=Administrator,cn=users,dc=stackstorm,dc=net"
 LDAP_BIND_PASSWORD = uuid.uuid4().hex
 LDAP_GROUP_DNS = ["cn=testers,dc=stackstorm,dc=net"]
+LDAP_GROUP_RDNS = ["cn=testers"]
+LDAP_GROUP_DNS_CASES = {
+    "group_fqdn": LDAP_GROUP_DNS,
+    "group_rdn": LDAP_GROUP_RDNS,
+}
 LDAP_CACERT = "../fixtures/certs/cacert.pem"
 LDAP_CACERT_REAL_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), LDAP_CACERT
@@ -142,16 +148,23 @@ def test_instantiate_no_group_dns_provided():
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
-    ([LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT],),
-    indirect=True,
+    "required_group_dns,mock_ldap_search",
+    (
+        pytest.param(
+            group_dns, [LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT], id=test_name
+        )
+        for test_name, group_dns in LDAP_GROUP_DNS_CASES.items()
+    ),
+    indirect=["mock_ldap_search"],
 )
-def test_authenticate(mock_ldap_bind: MockType, mock_ldap_search: MockType):
+def test_authenticate(
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
+):
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
         LDAP_BASE_OU,
-        LDAP_GROUP_DNS,
+        required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
     )
@@ -222,18 +235,25 @@ def test_authenticate_failure_bad_bind_cred(mocker: MockerFixture):
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
-    ([LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT],),
-    indirect=True,
+    "required_group_dns,mock_ldap_search",
+    (
+        pytest.param(
+            group_dns, [LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT], id=test_name
+        )
+        for test_name, group_dns in LDAP_GROUP_DNS_CASES.items()
+    ),
+    indirect=["mock_ldap_search"],
 )
 def test_authenticate_failure_bad_user_password(
-    mock_ldap_auth_failure: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str],
+    mock_ldap_auth_failure: MockType,
+    mock_ldap_search: MockType,
 ):
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
         LDAP_BASE_OU,
-        LDAP_GROUP_DNS,
+        required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
     )
@@ -243,22 +263,31 @@ def test_authenticate_failure_bad_user_password(
 
 
 @pytest.mark.parametrize(
-    "group_dns_check,mock_ldap_search",
+    "group_dns_check,required_group_dns,mock_ldap_search",
     (
-        pytest.param(group_dns_check, [LDAP_USER_SEARCH_RESULT, []], id=group_dns_check)
+        pytest.param(
+            group_dns_check,
+            group_dns,
+            [LDAP_USER_SEARCH_RESULT, []],
+            id=f"{group_dns_check}-{test_name}",
+        )
         for group_dns_check in ("and", "or")
+        for test_name, group_dns in LDAP_GROUP_DNS_CASES.items()
     ),
     indirect=["mock_ldap_search"],
 )
 def test_authenticate_failure_non_group_member_no_groups(
-    group_dns_check: str, mock_ldap_bind: MockType, mock_ldap_search: MockType
+    group_dns_check: str,
+    required_group_dns: List[str],
+    mock_ldap_bind: MockType,
+    mock_ldap_search: MockType,
 ):
     # User is not a member of any of the required groups
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
         LDAP_BASE_OU,
-        LDAP_GROUP_DNS,
+        required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
         group_dns_check=group_dns_check,
@@ -269,26 +298,31 @@ def test_authenticate_failure_non_group_member_no_groups(
 
 
 @pytest.mark.parametrize(
-    "group_dns_check,mock_ldap_search",
+    "group_dns_check,required_group_dns,mock_ldap_search",
     (
         pytest.param(
             group_dns_check,
+            group_dns,
             [LDAP_USER_SEARCH_RESULT, [("cn=group1,dc=stackstorm,dc=net", ())]],
-            id=group_dns_check,
+            id=f"{group_dns_check}-{test_name}",
         )
         for group_dns_check in ("and", "or")
+        for test_name, group_dns in LDAP_GROUP_DNS_CASES.items()
     ),
     indirect=["mock_ldap_search"],
 )
 def test_authenticate_failure_non_group_member_non_required_group(
-    group_dns_check: str, mock_ldap_bind: MockType, mock_ldap_search: MockType
+    group_dns_check: str,
+    required_group_dns: List[str],
+    mock_ldap_bind: MockType,
+    mock_ldap_search: MockType,
 ):
     # User is member of a group which is not required
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
         LDAP_BASE_OU,
-        LDAP_GROUP_DNS,
+        required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
         group_dns_check=group_dns_check,
@@ -299,28 +333,41 @@ def test_authenticate_failure_non_group_member_non_required_group(
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
+    "required_group_dns,mock_ldap_search",
     (
-        [
-            LDAP_USER_SEARCH_RESULT,
+        pytest.param(
+            group_dns,
             [
-                ("cn=group1,dc=stackstorm,dc=net", ()),
-                ("cn=group3,dc=stackstorm,dc=net", ()),
+                LDAP_USER_SEARCH_RESULT,
+                [
+                    ("cn=group1,dc=stackstorm,dc=net", ()),
+                    ("cn=group3,dc=stackstorm,dc=net", ()),
+                ],
             ],
-        ],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": [
+                "cn=group1,dc=stackstorm,dc=net",
+                "cn=group2,dc=stackstorm,dc=net",
+                "cn=group3,dc=stackstorm,dc=net",
+            ],
+            "group_rdn": [
+                "cn=group1",
+                "cn=group2",
+                "cn=group3",
+            ],
+        }.items()
     ),
-    indirect=True,
+    indirect=["mock_ldap_search"],
 )
 def test_authenticate_and_behavior_failure_non_group_member_of_all_required_groups_1(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str],
+    mock_ldap_bind: MockType,
+    mock_ldap_search: MockType,
 ):
     # User is member of two of the required groups (1 and 3) but not all three of them
     # (1, 2, 3)
-    required_group_dns = [
-        "cn=group1,dc=stackstorm,dc=net",
-        "cn=group2,dc=stackstorm,dc=net",
-        "cn=group3,dc=stackstorm,dc=net",
-    ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -336,26 +383,36 @@ def test_authenticate_and_behavior_failure_non_group_member_of_all_required_grou
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
+    "required_group_dns,mock_ldap_search",
     (
-        [
-            LDAP_USER_SEARCH_RESULT,
+        pytest.param(
+            group_dns,
             [
-                ("cn=group1,dc=stackstorm,dc=net", ()),
-                ("cn=group3,dc=stackstorm,dc=net", ()),
+                LDAP_USER_SEARCH_RESULT,
+                [
+                    ("cn=group1,dc=stackstorm,dc=net", ()),
+                    ("cn=group3,dc=stackstorm,dc=net", ()),
+                ],
             ],
-        ],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": [
+                "cn=group7,dc=stackstorm,dc=net",
+                "cn=group8,dc=stackstorm,dc=net",
+            ],
+            "group_rdn": [
+                "cn=group7",
+                "cn=group8",
+            ],
+        }.items()
     ),
-    indirect=True,
+    indirect=["mock_ldap_search"],
 )
 def test_authenticate_and_behavior_failure_non_group_member_of_all_required_groups_2(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
     # User is member of two of the groups, but none of them are required
-    required_group_dns = [
-        "cn=group7,dc=stackstorm,dc=net",
-        "cn=group8,dc=stackstorm,dc=net",
-    ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -371,31 +428,43 @@ def test_authenticate_and_behavior_failure_non_group_member_of_all_required_grou
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
+    "required_group_dns,mock_ldap_search",
     (
-        [
-            LDAP_USER_SEARCH_RESULT,
+        pytest.param(
+            group_dns,
             [
-                ("cn=group1,dc=stackstorm,dc=net", ()),
-                ("cn=group2,dc=stackstorm,dc=net", ()),
-                ("cn=group3,dc=stackstorm,dc=net", ()),
-                ("cn=group4,dc=stackstorm,dc=net", ()),
+                LDAP_USER_SEARCH_RESULT,
+                [
+                    ("cn=group1,dc=stackstorm,dc=net", ()),
+                    ("cn=group2,dc=stackstorm,dc=net", ()),
+                    ("cn=group3,dc=stackstorm,dc=net", ()),
+                    ("cn=group4,dc=stackstorm,dc=net", ()),
+                ],
             ],
-        ],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": [
+                "cn=group1,dc=stackstorm,dc=net",
+                "cn=group2,dc=stackstorm,dc=net",
+                "cn=group5,dc=stackstorm,dc=net",
+                "cn=group6,dc=stackstorm,dc=net",
+            ],
+            "group_rdn": [
+                "cn=group1",
+                "cn=group2",
+                "cn=group5",
+                "cn=group6",
+            ],
+        }.items()
     ),
-    indirect=True,
+    indirect=["mock_ldap_search"],
 )
 def test_authenticate_and_behavior_failure_non_group_member_of_all_required_groups_3(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
     # User is member of two of the required groups and two non-required, but not
     # all of the required groups
-    required_group_dns = [
-        "cn=group1,dc=stackstorm,dc=net",
-        "cn=group2,dc=stackstorm,dc=net",
-        "cn=group5,dc=stackstorm,dc=net",
-        "cn=group6,dc=stackstorm,dc=net",
-    ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -411,32 +480,44 @@ def test_authenticate_and_behavior_failure_non_group_member_of_all_required_grou
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
+    "required_group_dns,mock_ldap_search",
     (
-        [
-            LDAP_USER_SEARCH_RESULT,
+        pytest.param(
+            group_dns,
             [
-                ("cn=group1,dc=stackstorm,dc=net", ()),
-                ("cn=group2,dc=stackstorm,dc=net", ()),
-                ("cn=group3,dc=stackstorm,dc=net", ()),
-                ("cn=group4,dc=stackstorm,dc=net", ()),
+                LDAP_USER_SEARCH_RESULT,
+                [
+                    ("cn=group1,dc=stackstorm,dc=net", ()),
+                    ("cn=group2,dc=stackstorm,dc=net", ()),
+                    ("cn=group3,dc=stackstorm,dc=net", ()),
+                    ("cn=group4,dc=stackstorm,dc=net", ()),
+                ],
             ],
-        ],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": [
+                "cn=group1,dc=stackstorm,dc=net",
+                "cn=group2,dc=stackstorm,dc=net",
+                "cn=group5,dc=stackstorm,dc=net",
+                "cn=group6,dc=stackstorm,dc=net",
+            ],
+            "group_rdn": [
+                "cn=group1",
+                "cn=group2",
+                "cn=group5",
+                "cn=group6",
+            ],
+        }.items()
     ),
-    indirect=True,
+    indirect=["mock_ldap_search"],
 )
 def test_authenticate_and_is_default_behavior_non_group_member_of_all_required_groups(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
     # User is member of two of the required groups and two non-required, but not
     # all of the required groups
     # Verify "and" is a default group_dns_check_behavior
-    required_group_dns = [
-        "cn=group1,dc=stackstorm,dc=net",
-        "cn=group2,dc=stackstorm,dc=net",
-        "cn=group5,dc=stackstorm,dc=net",
-        "cn=group6,dc=stackstorm,dc=net",
-    ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -451,12 +532,22 @@ def test_authenticate_and_is_default_behavior_non_group_member_of_all_required_g
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
-    ([LDAP_USER_SEARCH_RESULT, [("cn=group1,dc=stackstorm,dc=net", ())]],),
-    indirect=True,
+    "required_group_dns,mock_ldap_search",
+    (
+        pytest.param(
+            group_dns,
+            [LDAP_USER_SEARCH_RESULT, [("cn=group1,dc=stackstorm,dc=net", ())]],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": ["cn=group1,dc=stackstorm,dc=net"],
+            "group_rdn": ["cn=group1"],
+        }.items()
+    ),
+    indirect=["mock_ldap_search"],
 )
 def test_authenticate_or_behavior_success_member_of_single_group_1(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
     # User is a member of single of possible required groups
     required_group_dns = ["cn=group1,dc=stackstorm,dc=net"]
@@ -475,20 +566,34 @@ def test_authenticate_or_behavior_success_member_of_single_group_1(
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
-    ([LDAP_USER_SEARCH_RESULT, [("cn=group1,dc=stackstorm,dc=net", ())]],),
-    indirect=True,
+    "required_group_dns,mock_ldap_search",
+    (
+        pytest.param(
+            group_dns,
+            [LDAP_USER_SEARCH_RESULT, [("cn=group1,dc=stackstorm,dc=net", ())]],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": [
+                "cn=group1,dc=stackstorm,dc=net",
+                "cn=group2,dc=stackstorm,dc=net",
+                "cn=group3,dc=stackstorm,dc=net",
+                "cn=group4,dc=stackstorm,dc=net",
+            ],
+            "group_rdn": [
+                "cn=group1",
+                "cn=group2",
+                "cn=group3",
+                "cn=group4",
+            ],
+        }.items()
+    ),
+    indirect=["mock_ldap_search"],
 )
 def test_authenticate_or_behavior_success_member_of_single_group_2(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
     # User is a member of single of possible required groups
-    required_group_dns = [
-        "cn=group1,dc=stackstorm,dc=net",
-        "cn=group2,dc=stackstorm,dc=net",
-        "cn=group3,dc=stackstorm,dc=net",
-        "cn=group4,dc=stackstorm,dc=net",
-    ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -504,20 +609,34 @@ def test_authenticate_or_behavior_success_member_of_single_group_2(
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
-    ([LDAP_USER_SEARCH_RESULT, [("cn=group3,dc=stackstorm,dc=net", ())]],),
-    indirect=True,
+    "required_group_dns,mock_ldap_search",
+    (
+        pytest.param(
+            group_dns,
+            [LDAP_USER_SEARCH_RESULT, [("cn=group3,dc=stackstorm,dc=net", ())]],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": [
+                "cn=group1,dc=stackstorm,dc=net",
+                "cn=group2,dc=stackstorm,dc=net",
+                "cn=group3,dc=stackstorm,dc=net",
+                "cn=group4,dc=stackstorm,dc=net",
+            ],
+            "group_rdn": [
+                "cn=group1",
+                "cn=group2",
+                "cn=group3",
+                "cn=group4",
+            ],
+        }.items()
+    ),
+    indirect=["mock_ldap_search"],
 )
 def test_authenticate_or_behavior_success_member_of_single_group_2b(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
     # User is a member of single of possible required groups
-    required_group_dns = [
-        "cn=group1,dc=stackstorm,dc=net",
-        "cn=group2,dc=stackstorm,dc=net",
-        "cn=group3,dc=stackstorm,dc=net",
-        "cn=group4,dc=stackstorm,dc=net",
-    ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -533,29 +652,42 @@ def test_authenticate_or_behavior_success_member_of_single_group_2b(
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
+    "required_group_dns,mock_ldap_search",
     (
-        [
-            LDAP_USER_SEARCH_RESULT,
+        pytest.param(
+            group_dns,
             [
-                ("cn=group1,dc=stackstorm,dc=net", ()),
-                ("cn=group4,dc=stackstorm,dc=net", ()),
+                LDAP_USER_SEARCH_RESULT,
+                [
+                    ("cn=group1,dc=stackstorm,dc=net", ()),
+                    ("cn=group4,dc=stackstorm,dc=net", ()),
+                ],
             ],
-        ],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": [
+                "cn=group1,dc=stackstorm,dc=net",
+                "cn=group2,dc=stackstorm,dc=net",
+                "cn=group3,dc=stackstorm,dc=net",
+                "cn=group4,dc=stackstorm,dc=net",
+                "cn=group5,dc=stackstorm,dc=net",
+            ],
+            "group_rdn": [
+                "cn=group1",
+                "cn=group2",
+                "cn=group3",
+                "cn=group4",
+                "cn=group5",
+            ],
+        }.items()
     ),
-    indirect=True,
+    indirect=["mock_ldap_search"],
 )
 def test_authenticate_or_behavior_success_member_of_multiple_groups_1(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
     # User is a member of multiple of required groups
-    required_group_dns = [
-        "cn=group1,dc=stackstorm,dc=net",
-        "cn=group2,dc=stackstorm,dc=net",
-        "cn=group3,dc=stackstorm,dc=net",
-        "cn=group4,dc=stackstorm,dc=net",
-        "cn=group5,dc=stackstorm,dc=net",
-    ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -571,26 +703,36 @@ def test_authenticate_or_behavior_success_member_of_multiple_groups_1(
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
+    "required_group_dns,mock_ldap_search",
     (
-        [
-            LDAP_USER_SEARCH_RESULT,
+        pytest.param(
+            group_dns,
             [
-                ("cn=group1,dc=stackstorm,dc=net", ()),
-                ("cn=group4,dc=stackstorm,dc=net", ()),
+                LDAP_USER_SEARCH_RESULT,
+                [
+                    ("cn=group1,dc=stackstorm,dc=net", ()),
+                    ("cn=group4,dc=stackstorm,dc=net", ()),
+                ],
             ],
-        ],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": [
+                "cn=group1,dc=stackstorm,dc=net",
+                "cn=group4,dc=stackstorm,dc=net",
+            ],
+            "group_rdn": [
+                "cn=group1",
+                "cn=group4",
+            ],
+        }.items()
     ),
-    indirect=True,
+    indirect=["mock_ldap_search"],
 )
 def test_authenticate_or_behavior_success_member_of_multiple_groups_2(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
     # User is a member of multiple of required groups
-    required_group_dns = [
-        "cn=group1,dc=stackstorm,dc=net",
-        "cn=group4,dc=stackstorm,dc=net",
-    ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -606,24 +748,31 @@ def test_authenticate_or_behavior_success_member_of_multiple_groups_2(
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
+    "required_group_dns,mock_ldap_search",
     (
-        [
-            LDAP_USER_SEARCH_RESULT,
+        pytest.param(
+            group_dns,
             [
-                ("cn=group1,dc=stackstorm,dc=net", ()),
-                ("cn=group3,dc=stackstorm,dc=net", ()),
-                ("cn=group6,dc=stackstorm,dc=net", ()),
+                LDAP_USER_SEARCH_RESULT,
+                [
+                    ("cn=group1,dc=stackstorm,dc=net", ()),
+                    ("cn=group3,dc=stackstorm,dc=net", ()),
+                    ("cn=group6,dc=stackstorm,dc=net", ()),
+                ],
             ],
-        ],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": ["cn=group3,dc=stackstorm,dc=net"],
+            "group_rdn": ["cn=group3"],
+        }.items()
     ),
-    indirect=True,
+    indirect=["mock_ldap_search"],
 )
 def test_authenticate_or_behavior_success_member_of_multiple_groups_3(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
-    # User is a member of multiple of required groups
-    required_group_dns = ["cn=group3,dc=stackstorm,dc=net"]
+    # User is a member of multiple groups including the required group
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -639,27 +788,37 @@ def test_authenticate_or_behavior_success_member_of_multiple_groups_3(
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
+    "required_group_dns,mock_ldap_search",
     (
-        [
-            LDAP_USER_SEARCH_RESULT,
+        pytest.param(
+            group_dns,
             [
-                ("cn=group1,dc=stackstorm,dc=net", ()),
-                ("cn=group3,dc=stackstorm,dc=net", ()),
-                ("cn=group6,dc=stackstorm,dc=net", ()),
+                LDAP_USER_SEARCH_RESULT,
+                [
+                    ("cn=group1,dc=stackstorm,dc=net", ()),
+                    ("cn=group3,dc=stackstorm,dc=net", ()),
+                    ("cn=group6,dc=stackstorm,dc=net", ()),
+                ],
             ],
-        ],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": [
+                "cn=group3,dc=stackstorm,dc=net",
+                "cn=group1,dc=stackstorm,dc=net",
+            ],
+            "group_rdn": [
+                "cn=group3",
+                "cn=group1",
+            ],
+        }.items()
     ),
-    indirect=True,
+    indirect=["mock_ldap_search"],
 )
 def test_authenticate_or_behavior_success_member_of_multiple_groups_3b(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
     # User is a member of multiple of required groups
-    required_group_dns = [
-        "cn=group3,dc=stackstorm,dc=net",
-        "cn=group1,dc=stackstorm,dc=net",
-    ]
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -900,16 +1059,23 @@ def test_get_user_multiple_results(
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
-    ([LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT],),
-    indirect=True,
+    "required_group_dns,mock_ldap_search",
+    (
+        pytest.param(
+            group_dns, [LDAP_USER_SEARCH_RESULT, LDAP_GROUP_SEARCH_RESULT], id=test_name
+        )
+        for test_name, group_dns in LDAP_GROUP_DNS_CASES.items()
+    ),
+    indirect=["mock_ldap_search"],
 )
-def test_get_user_groups(mock_ldap_bind: MockType, mock_ldap_search: MockType):
+def test_get_user_groups(
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
+):
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
         LDAP_BASE_OU,
-        LDAP_GROUP_DNS,
+        required_group_dns,
         LDAP_HOST,
         id_attr=LDAP_ID_ATTR,
     )
@@ -921,22 +1087,28 @@ def test_get_user_groups(mock_ldap_bind: MockType, mock_ldap_search: MockType):
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
+    "required_group_dns,mock_ldap_search",
     (
-        [
-            LDAP_USER_SEARCH_RESULT,
-            [("cn=group1,dc=stackstorm,dc=net", ())],
-            LDAP_USER_SEARCH_RESULT,
-            [("cn=group1,dc=stackstorm,dc=net", ())],
-        ],
+        pytest.param(
+            group_dns,
+            [
+                LDAP_USER_SEARCH_RESULT,
+                [("cn=group1,dc=stackstorm,dc=net", ())],
+                LDAP_USER_SEARCH_RESULT,
+                [("cn=group1,dc=stackstorm,dc=net", ())],
+            ],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": ["cn=group1,dc=stackstorm,dc=net"],
+            "group_rdn": ["cn=group1"],
+        }.items()
     ),
-    indirect=True,
+    indirect=["mock_ldap_search"],
 )
 def test_authenticate_and_get_user_groups_caching_disabled(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
-    required_group_dns = ["cn=group1,dc=stackstorm,dc=net"]
-
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -963,22 +1135,28 @@ def test_authenticate_and_get_user_groups_caching_disabled(
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
+    "required_group_dns,mock_ldap_search",
     (
-        [
-            LDAP_USER_SEARCH_RESULT,
-            [("cn=group1,dc=stackstorm,dc=net", ())],
-            LDAP_USER_SEARCH_RESULT,
-            [("cn=group1,dc=stackstorm,dc=net", ())],
-        ],
+        pytest.param(
+            group_dns,
+            [
+                LDAP_USER_SEARCH_RESULT,
+                [("cn=group1,dc=stackstorm,dc=net", ())],
+                LDAP_USER_SEARCH_RESULT,
+                [("cn=group1,dc=stackstorm,dc=net", ())],
+            ],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": ["cn=group1,dc=stackstorm,dc=net"],
+            "group_rdn": ["cn=group1"],
+        }.items()
     ),
-    indirect=True,
+    indirect=["mock_ldap_search"],
 )
 def test_authenticate_and_get_user_groups_caching_enabled(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
-    required_group_dns = ["cn=group1,dc=stackstorm,dc=net"]
-
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
@@ -1003,18 +1181,33 @@ def test_authenticate_and_get_user_groups_caching_enabled(
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
-    ([LDAP_USER_SEARCH_RESULT],),
-    indirect=True,
+    "required_group_dns,mock_ldap_search",
+    (
+        pytest.param(
+            group_dns,
+            [LDAP_USER_SEARCH_RESULT],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": [
+                "cn=group3,dc=stackstorm,dc=net",
+                "cn=group4,dc=stackstorm,dc=net",
+            ],
+            "group_rdn": [
+                "cn=group3",
+                "cn=group4",
+            ],
+        }.items()
+    ),
+    indirect=["mock_ldap_search"],
 )
 def test_get_user_specifying_account_pattern(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType, mocker: MockerFixture
+    required_group_dns: List[str],
+    mock_ldap_bind: MockType,
+    mock_ldap_search: MockType,
+    mocker: MockerFixture,
 ):
     expected_username = "unique_username_1"
-    required_group_dns = [
-        "cn=group3,dc=stackstorm,dc=net",
-        "cn=group4,dc=stackstorm,dc=net",
-    ]
     scope = "subtree"
     scope_number = ldap_backend.SEARCH_SCOPES[scope]
 
@@ -1052,26 +1245,39 @@ def test_get_user_specifying_account_pattern(
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
+    "required_group_dns,mock_ldap_search",
     (
-        [
-            LDAP_USER_SEARCH_RESULT,
-            [("cn=group3,dc=stackstorm,dc=net", ())],
-            LDAP_USER_SEARCH_RESULT,
-            [("cn=group4,dc=stackstorm,dc=net", ())],
-        ],
+        pytest.param(
+            group_dns,
+            [
+                LDAP_USER_SEARCH_RESULT,
+                [("cn=group3,dc=stackstorm,dc=net", ())],
+                LDAP_USER_SEARCH_RESULT,
+                [("cn=group4,dc=stackstorm,dc=net", ())],
+            ],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": [
+                "cn=group3,dc=stackstorm,dc=net",
+                "cn=group4,dc=stackstorm,dc=net",
+            ],
+            "group_rdn": [
+                "cn=group3",
+                "cn=group4",
+            ],
+        }.items()
     ),
-    indirect=True,
+    indirect=["mock_ldap_search"],
 )
 def test_get_user_groups_specifying_group_pattern(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType, mocker: MockerFixture
+    required_group_dns: List[str],
+    mock_ldap_bind: MockType,
+    mock_ldap_search: MockType,
+    mocker: MockerFixture,
 ):
     expected_user_dn = "unique_userdn_1"
     expected_username = "unique_username_2"
-    required_group_dns = [
-        "cn=group3,dc=stackstorm,dc=net",
-        "cn=group4,dc=stackstorm,dc=net",
-    ]
     scope = "subtree"
     scope_number = ldap_backend.SEARCH_SCOPES[scope]
 
@@ -1118,24 +1324,34 @@ def test_get_user_groups_specifying_group_pattern(
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
+    "required_group_dns,mock_ldap_search",
     (
-        [
-            LDAP_USER_SEARCH_RESULT,
-            [("cn=group3,dc=stackstorm,dc=net", ())],
-            LDAP_USER_SEARCH_RESULT,
-            [("cn=group4,dc=stackstorm,dc=net", ())],
-        ],
+        pytest.param(
+            group_dns,
+            [
+                LDAP_USER_SEARCH_RESULT,
+                [("cn=group3,dc=stackstorm,dc=net", ())],
+                LDAP_USER_SEARCH_RESULT,
+                [("cn=group4,dc=stackstorm,dc=net", ())],
+            ],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": [
+                "cn=group3,dc=stackstorm,dc=net",
+                "cn=group4,dc=stackstorm,dc=net",
+            ],
+            "group_rdn": [
+                "cn=group3",
+                "cn=group4",
+            ],
+        }.items()
     ),
-    indirect=True,
+    indirect=["mock_ldap_search"],
 )
 def test_get_groups_caching_no_cross_username_cache_pollution(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
-    required_group_dns = [
-        "cn=group3,dc=stackstorm,dc=net",
-        "cn=group4,dc=stackstorm,dc=net",
-    ]
     # Test which verifies that cache items are correctly scoped per username
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
@@ -1161,25 +1377,34 @@ def test_get_groups_caching_no_cross_username_cache_pollution(
 
 
 @pytest.mark.parametrize(
-    "mock_ldap_search",
+    "required_group_dns,mock_ldap_search",
     (
-        [
-            LDAP_USER_SEARCH_RESULT,
-            [("cn=group3,dc=stackstorm,dc=net", ())],
-            LDAP_USER_SEARCH_RESULT,
-            [("cn=group4,dc=stackstorm,dc=net", ())],
-        ],
+        pytest.param(
+            group_dns,
+            [
+                LDAP_USER_SEARCH_RESULT,
+                [("cn=group3,dc=stackstorm,dc=net", ())],
+                LDAP_USER_SEARCH_RESULT,
+                [("cn=group4,dc=stackstorm,dc=net", ())],
+            ],
+            id=test_name,
+        )
+        for test_name, group_dns in {
+            "group_fqdn": [
+                "cn=group3,dc=stackstorm,dc=net",
+                "cn=group4,dc=stackstorm,dc=net",
+            ],
+            "group_rdn": [
+                "cn=group3",
+                "cn=group4",
+            ],
+        }.items()
     ),
-    indirect=True,
+    indirect=["mock_ldap_search"],
 )
 def test_get_groups_caching_cache_ttl(
-    mock_ldap_bind: MockType, mock_ldap_search: MockType
+    required_group_dns: List[str], mock_ldap_bind: MockType, mock_ldap_search: MockType
 ):
-    required_group_dns = [
-        "cn=group3,dc=stackstorm,dc=net",
-        "cn=group4,dc=stackstorm,dc=net",
-    ]
-
     backend = ldap_backend.LDAPAuthenticationBackend(
         LDAP_BIND_DN,
         LDAP_BIND_PASSWORD,
