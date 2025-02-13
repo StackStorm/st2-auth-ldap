@@ -61,7 +61,7 @@ If all of the steps succeed, then the user is authenticated. If any of those ste
 
 ### Simple Configuration
 
-Please refer to the [standalone mode](http://docs.stackstorm.com/config/authentication.html#setup-standalone-mode) in the configuration section for authentication for basic setup concept. The following is an example of the auth section in the StackStorm configuration file for the LDAP backend.
+Please refer to the [standalone mode](https://docs.stackstorm.com/authentication.html#standalone-auth-mode) in the configuration section for authentication for basic setup concept. The following is an example of the auth section in the StackStorm configuration file for the LDAP backend.
 
 ```ini
 [auth]
